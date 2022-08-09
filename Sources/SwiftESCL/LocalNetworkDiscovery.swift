@@ -58,15 +58,6 @@ public class ScannerRepresentation {
         // eSCL root of the device
         self.root = recordDict["rs"]!
     }
-    
-    /// Prints all stored information of the device
-    public func printScanner() {
-        print("Host: \(self.hostname)")
-        print("Location: \(self.location)")
-        print("Model: \(self.model)")
-        print("Icon: \(self.iconUrl)")
-        print("Root: \(self.root)")
-    }
 }
 
 /**
