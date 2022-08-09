@@ -13,14 +13,14 @@ import Combine
  An object representing a single eSCL scanner. It contains no information but the scanners hostname/ip.
  The methods of this class are the way you can interact with the device.
  */
-class esclScanner: NSObject, URLSessionDelegate {
+public class esclScanner: NSObject, URLSessionDelegate {
     var baseURI: String
 
     init(ip: String, root: String) {
         self.baseURI = "https://\(ip)/\(root)/"
     }
 
-    enum ScannerStatus {
+    public enum ScannerStatus {
         case Idle
         case Processing
         case Testing
@@ -32,7 +32,7 @@ class esclScanner: NSObject, URLSessionDelegate {
      This method retrieves the capabilities of a scanner.
      - Returns:A "scanner" object with all parsed capabilities. Currently, not all available capabilities are stored or parsed. For an exact overview of what is parsed or stored, see the declerations of the Scanner struct or CapabilityParser.
      */
-    func getCapabilities() -> Scanner {
+    public func getCapabilities() -> Scanner {
         
         var capabilities = Scanner()
         
@@ -78,7 +78,7 @@ class esclScanner: NSObject, URLSessionDelegate {
      This method query the scanners status.
      - Returns:A string with the scanners current status
      */
-    func getStatus() -> ScannerStatus {
+    public func getStatus() -> ScannerStatus {
         
         var status = ScannerStatus.Down
         
@@ -142,7 +142,7 @@ class esclScanner: NSObject, URLSessionDelegate {
      - Parameter uri: A string with the aboslute URL to the scanned image. This URL is created by the scanner after posting a scan-request and is available for a short time only (I'm guessing it can only be accessed once.)
      - Returns: A tuple containing the binary data of the image and the response code of the last request (which should be 200).
      */
-    func sendGetRequest(uri: String) -> (Data, Int) {
+    public func sendGetRequest(uri: String) -> (Data, Int) {
         
         var urlRequest = URLRequest(url: URL(string: uri)!)
         var imageData = Data()
@@ -193,7 +193,7 @@ class esclScanner: NSObject, URLSessionDelegate {
      - Parameter intent: This helps the scanner auto-determine settings for the scan. Technically, version and intent should suffice for a valid request. To my understanding, the defaults set by an intent are ignored as soon as values are provided.
      - Returns: A tuple containing the the URL to the scan and the response code of the last request (which should be 200).
      */
-    func sendPostRequest(resolution: String = "300", colorMode: String = "RGB24", format: String = "application/pdf", version: String = "2.5", source: String = "Platen", width: Int = 2480, height: Int = 3508, XOffset: String = "0", YOffset: String = "0", intent: String = "Document") -> (String, Int) {
+    public func sendPostRequest(resolution: String = "300", colorMode: String = "RGB24", format: String = "application/pdf", version: String = "2.5", source: String = "Platen", width: Int = 2480, height: Int = 3508, XOffset: String = "0", YOffset: String = "0", intent: String = "Document") -> (String, Int) {
 
         var urlRequest = URLRequest(url: URL(string: self.baseURI+"ScanJobs")!)
         
@@ -289,7 +289,7 @@ class esclScanner: NSObject, URLSessionDelegate {
      - Parameter intent: This helps the scanner auto-determine settings for the scan. Technically, version and intent should suffice for a valid request. To my understanding, the defaults set by an intent are ignored as soon as values are provided.
      - Returns: A tuple containing the Binary Data of the scanned image and the last http response code
      */
-    func scanDocument(resolution: String = "300", colorMode: String = "RGB24", format: String = "application/pdf", version: String = "2.5", source: String = "Platen", width: Int = 2480, height: Int = 3508, XOffset: String = "0", YOffset: String = "0", intent: String = "Document") -> (Data,Int) {
+    public func scanDocument(resolution: String = "300", colorMode: String = "RGB24", format: String = "application/pdf", version: String = "2.5", source: String = "Platen", width: Int = 2480, height: Int = 3508, XOffset: String = "0", YOffset: String = "0", intent: String = "Document") -> (Data,Int) {
         
         var data = Data()
         
@@ -332,7 +332,7 @@ class esclScanner: NSObject, URLSessionDelegate {
      - Parameter filePath: Path at which the file should be stored. If not specified, the file will be stored in the document root under the name "scan-YY-MM-dd-HH-mm-ss.fileExtension"
      - Returns: A tuple containing the URL to the file created and the last http response code
      */
-    func scanDocumentAndSaveFile(resolution: String = "300", colorMode: String = "RGB24", format: String = "application/pdf", version: String, source: String = "Platen", width: Int = 2480, height: Int = 3508, XOffset: Int = 0, YOffset: Int = 0, intent: String = "Document", filePath: URL? = nil) -> (URL?, Int) {
+    public func scanDocumentAndSaveFile(resolution: String = "300", colorMode: String = "RGB24", format: String = "application/pdf", version: String, source: String = "Platen", width: Int = 2480, height: Int = 3508, XOffset: Int = 0, YOffset: Int = 0, intent: String = "Document", filePath: URL? = nil) -> (URL?, Int) {
         
         let status = self.getStatus()
         if status != ScannerStatus.Idle {
@@ -378,7 +378,7 @@ class esclScanner: NSObject, URLSessionDelegate {
     }
     
     // It is necessary to build a custom URLSession for this as the self signed certificates the scanners use are obviously not trusted by default.
-    func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+    public func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
         if challenge.protectionSpace.serverTrust == nil {
             completionHandler(.useCredential, nil)
         } else {

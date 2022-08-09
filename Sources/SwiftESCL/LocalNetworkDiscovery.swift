@@ -13,7 +13,7 @@ import SwiftUI
 /**
  An object storing the attributes of a single scanner.
  */
-class ScannerRepresentation {
+public class ScannerRepresentation {
     var hostname: String
     var location: String?
     var model: String?
@@ -60,7 +60,7 @@ class ScannerRepresentation {
     }
     
     /// Prints all stored information of the device
-    func printScanner() {
+    public func printScanner() {
         print("Host: \(self.hostname)")
         print("Location: \(self.location)")
         print("Model: \(self.model)")
@@ -72,7 +72,7 @@ class ScannerRepresentation {
 /**
  Object that can handle Bonjour requests.
  */
-class Browser {
+public class Browser {
     
     let browser: NWBrowser
     /// A dictionary in the format [hostname:ScannerRepresentation] of discovered devices.
@@ -93,14 +93,14 @@ class Browser {
      Method to pass a binding dictionary to the browser. This isn't done in the main init to prevent issues with initiation in other classes.
      - Parameter scanners: A binding dictionary in the format [hostname:ScannerRepresentation] of discovered devices.
      */
-    func setDevices(scanners: Binding<[String:ScannerRepresentation]>) {
+    public func setDevices(scanners: Binding<[String:ScannerRepresentation]>) {
         self.scanners = scanners
     }
 
     /**
      Method to start discovery of devices via Bonjour.
      */
-    func start() {
+    public func start() {
         browser.stateUpdateHandler = { newState in
             print("browser.stateUpdateHandler \(newState)")
         }
