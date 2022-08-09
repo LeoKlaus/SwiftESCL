@@ -25,7 +25,7 @@ public class ScannerRepresentation {
      - Parameter hostname: String containing the hostname/ip of the scanner.
      - Parameter root: The path to the eSCL root of the device. This should be  "eSCL" for most devices.
      */
-    init(hostname: String, root: String) {
+    public init(hostname: String, root: String) {
         self.hostname = hostname
         self.root = root
     }
@@ -81,7 +81,7 @@ public class Browser {
     /**
      Create a new browser without a binding dictionary. Calling start() on this won't do anything.
      */
-    init() {
+    public init() {
         let parameters = NWParameters()
         parameters.includePeerToPeer = true
 

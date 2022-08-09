@@ -16,7 +16,7 @@ public class StatusParser: XMLParser {
     var status: String = ""
     
     private var textBuffer: String = ""
-    override init(data: Data) {
+    public override init(data: Data) {
         super.init(data: data)
         self.delegate = self
     }

@@ -16,7 +16,7 @@ import Combine
 public class esclScanner: NSObject, URLSessionDelegate {
     var baseURI: String
 
-    init(ip: String, root: String) {
+    public init(ip: String, root: String) {
         self.baseURI = "https://\(ip)/\(root)/"
     }
 
