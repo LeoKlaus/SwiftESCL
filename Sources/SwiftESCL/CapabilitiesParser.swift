@@ -12,24 +12,24 @@ import Foundation
  An object representing the ScannerCapabilities of a scanner.
  */
 public struct Scanner {
-    var version: String = ""
-    var makeAndModel: String = ""
+    public var version: String = ""
+    public var makeAndModel: String = ""
     // This contains the capabilities of each source.
-    var sourceCapabilities: [String: Capabilities] = [:]
+    public var sourceCapabilities: [String: Capabilities] = [:]
 }
 
 /**
  An object representing the capabilites of a single source on a scanner.
  */
 public struct Capabilities {
-    var minWidth: String = ""
-    var maxWidth: String = ""
-    var minHeight: String = ""
-    var maxHeight: String = ""
-    var colorModes: [String] = []
-    var documentFormats: [String] = []
-    var discreteResolutions: [String] = []
-    var supportedIntents: [String] = []
+    public var minWidth: String = ""
+    public var maxWidth: String = ""
+    public var minHeight: String = ""
+    public var maxHeight: String = ""
+    public var colorModes: [String] = []
+    public var documentFormats: [String] = []
+    public var discreteResolutions: [String] = []
+    public var supportedIntents: [String] = []
 }
 
 /**
