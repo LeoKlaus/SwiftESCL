@@ -14,11 +14,11 @@ import SwiftUI
  An object storing the attributes of a single scanner.
  */
 public class ScannerRepresentation {
-    var hostname: String
-    var location: String?
-    var model: String?
-    var iconUrl: URL?
-    var root: String
+    public var hostname: String
+    public var location: String?
+    public var model: String?
+    public var iconUrl: URL?
+    public var root: String
     
     /**
      This initialiser is only meant for manually adding devices if Bonjour doesn't work or isn't avaiable.
