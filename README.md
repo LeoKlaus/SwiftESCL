@@ -47,7 +47,7 @@ print(scanner.scanner.sourceCapabilities.keys)
 // ["Adf", "Platen"]
 print(scanner.scanner.sourceCapabilities["Adf"]?.discreteResolutions)
 // Would list all resolutions supported by your scanners ADF, for example:
-// ["100", "200", "300", "600"]
+// [100, 200, 300, 600]
 
 // Status is now most likely "Idle"
 let status = scanner.getStatus()
@@ -57,7 +57,7 @@ let status = scanner.getStatus()
 
 Use the sendPostRequest method to create a POST request:
 ```swift
-let (responseURL, postResponseCode) = scanner.sendPostRequest(resolution: "300", format: "application/pdf", source: "Platen", width: 2480, height: 3508)
+let (responseURL, postResponseCode) = scanner.sendPostRequest(resolution: 300, format: "application/pdf", source: "Platen", width: 2480, height: 3508)
 // responseURL contains the URL to the document on the scanner, this is where you will derict your GET request to.
 // postResponseCode should be 201 (CREATED). If it isn't, there's likely an invalid mix of options and the scanner returned 409 (CONFLICT)
 ```
@@ -71,7 +71,7 @@ let (imageData, getResponseCode) = scanner.sendGetRequest(uri: responseURL)
 
 There's also a method scanDocument(), which takes the same parameters as sendPostRequest() but executes both the POST and GET requests. It returns the binary data of the scanned image and the latest responseCode (which should be 200):
 ```swift
-let (imageData, responseCode) = scanner.scanDocument(resolution: "300", format: "application/pdf", version: capabilities.version, source: "Platen", width: 2480, height: 3508)
+let (imageData, responseCode) = scanner.scanDocument(resolution: 300, format: "application/pdf", version: capabilities.version, source: "Platen", width: 2480, height: 3508)
 // Now you can do with that data whatever you like. In most cases, it's probably a good idea to store the data on disk.
 // For that exact case, there's another method scanDocumentAndSaveFile(), which takes the same parameters as sendPostRequest() but returns a URL to the file on disk instead of the data.
 // The file is saved to the root of the documents directory of the app by default, a custom path can be specified using the filePath parameter though.
