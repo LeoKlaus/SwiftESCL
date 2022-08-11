@@ -18,9 +18,9 @@ With my implementation, the procedure is as follows:
 ### 0. Adding the package as a dependency to your project
 
 Open the Package Dependencies tab of your project configuration and click the "+" to add a dependency.
-[Image1]
+![Overview of the project settings in XCode](images/XCode1.png)
 Now paste the link to this page (https://github.com/LeoKlaus/SwiftESCL) in the search box and click on "Add Package". You may want to include a certain tag to prevent updates to the package from breaking your code.
-[Image2]
+![Overview of the Add Package page in XCode](images/XCode2.png)
 Click on "Add Package" once more and wait for XCode to download the package.
 
 ### 1. Discovering devices
