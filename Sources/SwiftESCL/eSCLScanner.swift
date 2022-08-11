@@ -20,7 +20,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
     public init(ip: String, root: String) {
         self.baseURI = "https://\(ip)/\(root)/"
         super.init()
-        _ = self.getCapabilities()
+        self.getCapabilities()
     }
 
     public enum ScannerStatus {
@@ -33,9 +33,8 @@ public class esclScanner: NSObject, URLSessionDelegate {
     
     /**
      This method retrieves the capabilities of a scanner.
-     - Returns:A "scanner" object with all parsed capabilities. Currently, not all available capabilities are stored or parsed. For an exact overview of what is parsed or stored, see the declerations of the Scanner struct or CapabilityParser.
      */
-    public func getCapabilities() -> Scanner {
+    private func getCapabilities() {
         
         var capabilities = Scanner()
         
@@ -75,12 +74,11 @@ public class esclScanner: NSObject, URLSessionDelegate {
         task.resume()
         sem.wait()
         self.scanner = capabilities
-        return capabilities
     }
     
     /**
      This method query the scanners status.
-     - Returns:A string with the scanners current status
+     - Returns:An enum of type ScannerStatus
      */
     public func getStatus() -> ScannerStatus {
         
@@ -114,7 +112,6 @@ public class esclScanner: NSObject, URLSessionDelegate {
             let parser = StatusParser(data: data)
             let success:Bool = parser.parse()
             if success {
-                //status = parser.status
                 if parser.status == "Idle" {
                     status = ScannerStatus.Idle
                 }
@@ -195,9 +192,17 @@ public class esclScanner: NSObject, URLSessionDelegate {
      - Parameter XOffset: Offset on the X-Axis. It is necessary to set this for some scanners.
      - Parameter YOffset: Offset on the Y-Axis.
      - Parameter intent: This helps the scanner auto-determine settings for the scan. Technically, version and intent should suffice for a valid request. To my understanding, the defaults set by an intent are ignored as soon as values are provided.
+     - Parameter colorSpace: The colorspace to use for the scan. Both my scanners only support one color space (sRGB), so I can't really test this.
+     - Parameter ccdChannel: I'm not quite sure what exactly this does. My scanners both only support NTSC, so I can't test this.
+     - Parameter contentType: I'm not quite sure how this differs from intent. My guess is that this only provides a subset of the defautls provided through an intent.
+     - Parameter brightness: The brightness setting to use for the scan.
+     - Parameter compressionFacter: How much the resulting image should be compressed.
+     - Parameter contrast: Contrast setting to use for the scan.
+     - Parameter sharpen: How much sharpening should be applied to the image.
+     - Parameter threshold: I'm not quite sure what exactly this does. My best guess is that this would define the cutoff from which white is considered white when scanning in grayscale or black and white.
      - Returns: A tuple containing the the URL to the scan and the response code of the last request (which should be 200).
      */
-    public func sendPostRequest(resolution: Int? = nil, colorMode: String? = nil, format: String? = nil, source: String = "Platen", width: Int = 2480, height: Int = 3508, XOffset: Int = 0, YOffset: Int = 0, intent: String? = nil, colorSpace: String? = nil, ccdChannel: String? = nil, contentType: String? = nil, brightness: Int? = nil, compressionFactor: Int? = nil, contrast: Int? = nil, sharpen: Int? = nil, threshold: Int? = nil) -> (String, Int) {
+    public func sendPostRequest(resolution: Int? = nil, colorMode: String? = nil, format: String? = nil, source: String = "Platen", width: Int? = nil, height: Int? = nil, XOffset: Int? = nil, YOffset: Int? = nil, intent: String? = nil, colorSpace: String? = nil, ccdChannel: String? = nil, contentType: String? = nil, brightness: Int? = nil, compressionFactor: Int? = nil, contrast: Int? = nil, sharpen: Int? = nil, threshold: Int? = nil) -> (String, Int) {
 
         var urlRequest = URLRequest(url: URL(string: self.baseURI+"ScanJobs")!)
         
@@ -228,17 +233,38 @@ public class esclScanner: NSObject, URLSessionDelegate {
         var body = """
     <scan:ScanSettings xmlns:pwg="http://www.pwg.org/schemas/2010/12/sm" xmlns:scan="http://schemas.hp.com/imaging/escl/2011/05/03">
       <pwg:Version>\(self.scanner.version)</pwg:Version>
-          <pwg:ScanRegions>
-            <pwg:ScanRegion>
-              <pwg:XOffset>\(XOffset)</pwg:XOffset>
-              <pwg:YOffset>\(YOffset)</pwg:YOffset>
-              <pwg:Width>\(width)</pwg:Width>
-              <pwg:Height>\(height)</pwg:Height>
-              <pwg:ContentRegionUnits>escl:ThreeHundredthsOfInches</pwg:ContentRegionUnits>
-            </pwg:ScanRegion>
-          </pwg:ScanRegions>
-      <pwg:InputSource>\(fuckYouMopriaForMakingThisSoComplicated)</pwg:InputSource>
     """
+        
+        if width != nil && height != nil {
+            body.append("\n<pwg:ScanRegions>")
+            body.append("\n<pwg:ScanRegion>")
+        
+            if width! <= self.scanner.maxWidth && width! >= self.scanner.minWidth {
+                body.append("\n<pwg:Width>\(width!)</pwg:Width>")
+            } else {
+                print("Width \(width!) is not supported by the scanner. Ignoring this parameter.")
+            }
+            
+            if height! <= self.scanner.maxHeight && height! >= self.scanner.minHeight {
+                body.append("\n<pwg:Height>\(height!)</pwg:Height>")
+            } else {
+                print("Height \(height!) is not supported by the scanner. Ignoring this parameter.")
+            }
+            
+            if XOffset != nil {
+                body.append("\n<pwg:XOffset>\(XOffset!)</pwg:XOffset>")
+            }
+            
+            if YOffset != nil {
+                body.append("\n<pwg:YOffset>\(YOffset!)</pwg:YOffset>")
+            }
+            
+            body.append("\n<pwg:ContentRegionUnits>escl:ThreeHundredthsOfInches</pwg:ContentRegionUnits>")
+            body.append("\n</pwg:ScanRegion>")
+            body.append("\n</pwg:ScanRegions>")
+        }
+        
+        body.append("\n<pwg:InputSource>\(fuckYouMopriaForMakingThisSoComplicated)</pwg:InputSource>")
         
         if intent != nil {
             if sourceCapabilities.supportedIntents.contains(intent!) {
@@ -298,7 +324,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
         }
         
         if brightness != nil {
-            if sourceCapabilities.brightnessSupport.min < brightness! && brightness! < sourceCapabilities.brightnessSupport.max {
+            if self.scanner.brightnessSupport.min <= brightness! && brightness! <= self.scanner.brightnessSupport.max {
                 body.append("\n<scan:Brightness>\(brightness!)</scan:Brightness>")
             } else {
                 print("Brightness setting \(brightness!) is not supported by the scanner. Ignoring this parameter.")
@@ -306,7 +332,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
         }
         
         if compressionFactor != nil {
-            if sourceCapabilities.compressionFactorSupport.min < compressionFactor! && compressionFactor! < sourceCapabilities.compressionFactorSupport.max {
+            if self.scanner.compressionFactorSupport.min <= compressionFactor! && compressionFactor! <= self.scanner.compressionFactorSupport.max {
                 body.append("\n<scan:CompressionFactor>\(compressionFactor!)</scan:CompressionFactor>")
             } else {
                 print("Compression factor \(compressionFactor!) is not supported by the scanner. Ignoring this parameter.")
@@ -314,7 +340,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
         }
         
         if contrast != nil {
-            if sourceCapabilities.contrastSupport.min < contrast! && contrast! < sourceCapabilities.contrastSupport.max {
+            if self.scanner.contrastSupport.min <= contrast! && contrast! <= self.scanner.contrastSupport.max {
                 body.append("\n<scan:Contrast>\(contrast!)</scan:Contrast>")
             } else {
                 print("Contrast setting \(contrast!) is not supported by the scanner. Ignoring this parameter.")
@@ -322,7 +348,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
         }
         
         if sharpen != nil {
-            if sourceCapabilities.sharpenSupport.min < sharpen! && sharpen! < sourceCapabilities.sharpenSupport.max {
+            if self.scanner.sharpenSupport.min <= sharpen! && sharpen! <= self.scanner.sharpenSupport.max {
                 body.append("\n<scan:Sharpen>\(sharpen!)</scan:Sharpen>")
             } else {
                 print("Sharpen setting \(sharpen!) is not supported by the scanner. Ignoring this parameter.")
@@ -330,7 +356,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
         }
         
         if threshold != nil {
-            if sourceCapabilities.thresholdSupport.min < threshold! && threshold! < sourceCapabilities.thresholdSupport.max {
+            if self.scanner.thresholdSupport.min <= threshold! && threshold! <= self.scanner.thresholdSupport.max {
                 body.append("\n<scan:Threshold>\(threshold!)</scan:Threshold>")
             } else {
                 print("Threshold \(threshold!) is not supported by the scanner. Ignoring this parameter.")
@@ -360,7 +386,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             }
             
             guard(200 ... 299) ~= response.statusCode else {
-                print("POST request returned stauts \(response.statusCode)")
+                print("POST request returned status \(response.statusCode)")
                 responseCode = response.statusCode
                 return
             }
@@ -390,9 +416,17 @@ public class esclScanner: NSObject, URLSessionDelegate {
      - Parameter XOffset: Offset on the X-Axis. It is necessary to set this for some scanners.
      - Parameter YOffset: Offset on the Y-Axis.
      - Parameter intent: This helps the scanner auto-determine settings for the scan. Technically, version and intent should suffice for a valid request. To my understanding, the defaults set by an intent are ignored as soon as values are provided.
+     - Parameter colorSpace: The colorspace to use for the scan. Both my scanners only support one color space (sRGB), so I can't really test this.
+     - Parameter ccdChannel: I'm not quite sure what exactly this does. My scanners both only support NTSC, so I can't test this.
+     - Parameter contentType: I'm not quite sure how this differs from intent. My guess is that this only provides a subset of the defautls provided through an intent.
+     - Parameter brightness: The brightness setting to use for the scan.
+     - Parameter compressionFacter: How much the resulting image should be compressed.
+     - Parameter contrast: Contrast setting to use for the scan.
+     - Parameter sharpen: How much sharpening should be applied to the image.
+     - Parameter threshold: I'm not quite sure what exactly this does. My best guess is that this would define the cutoff from which white is considered white when scanning in grayscale or black and white.
      - Returns: A tuple containing the Binary Data of the scanned image and the last http response code
      */
-    public func scanDocument(resolution: Int? = nil, colorMode: String = "RGB24", format: String = "application/pdf", version: String = "2.5", source: String = "Platen", width: Int = 2480, height: Int = 3508, XOffset: String = "0", YOffset: String = "0", intent: String = "Document") -> (Data,Int) {
+    public func scanDocument(resolution: Int? = nil, colorMode: String? = nil, format: String? = nil, source: String = "Platen", width: Int? = nil, height: Int? = nil, XOffset: Int? = nil, YOffset: Int? = nil, intent: String? = nil, colorSpace: String? = nil, ccdChannel: String? = nil, contentType: String? = nil, brightness: Int? = nil, compressionFactor: Int? = nil, contrast: Int? = nil, sharpen: Int? = nil, threshold: Int? = nil) -> (Data,Int) {
         
         var data = Data()
         
@@ -401,7 +435,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             return (data, 503)
         }
         
-        let (url, postResponse) = self.sendPostRequest(resolution: resolution, colorMode: colorMode, format: format, source: source, width: width, height: height, intent: intent)
+        let (url, postResponse) = self.sendPostRequest(resolution: resolution, colorMode: colorMode, format: format, source: source, width: width, height: height, XOffset: XOffset, YOffset: YOffset, intent: intent, colorSpace: colorSpace, ccdChannel: ccdChannel, contentType: contentType, brightness: brightness, compressionFactor: compressionFactor, contrast: contrast, sharpen: sharpen, threshold: threshold)
         
         if postResponse != 201 {
             print("Scanner didn't accept the job. \(postResponse)")
@@ -432,10 +466,18 @@ public class esclScanner: NSObject, URLSessionDelegate {
      - Parameter XOffset: Offset on the X-Axis. It is necessary to set this for some scanners.
      - Parameter YOffset: Offset on the Y-Axis.
      - Parameter intent: This helps the scanner auto-determine settings for the scan. Technically, version and intent should suffice for a valid request. To my understanding, the defaults set by an intent are ignored as soon as values are provided.
+     - Parameter colorSpace: The colorspace to use for the scan. Both my scanners only support one color space (sRGB), so I can't really test this.
+     - Parameter ccdChannel: I'm not quite sure what exactly this does. My scanners both only support NTSC, so I can't test this.
+     - Parameter contentType: I'm not quite sure how this differs from intent. My guess is that this only provides a subset of the defautls provided through an intent.
+     - Parameter brightness: The brightness setting to use for the scan.
+     - Parameter compressionFacter: How much the resulting image should be compressed.
+     - Parameter contrast: Contrast setting to use for the scan.
+     - Parameter sharpen: How much sharpening should be applied to the image.
+     - Parameter threshold: I'm not quite sure what exactly this does. My best guess is that this would define the cutoff from which white is considered white when scanning in grayscale or black and white.
      - Parameter filePath: Path at which the file should be stored. If not specified, the file will be stored in the document root under the name "scan-YY-MM-dd-HH-mm-ss.fileExtension"
      - Returns: A tuple containing the URL to the file created and the last http response code
      */
-    public func scanDocumentAndSaveFile(resolution: Int? = nil, colorMode: String = "RGB24", format: String = "application/pdf", version: String, source: String = "Platen", width: Int = 2480, height: Int = 3508, XOffset: Int = 0, YOffset: Int = 0, intent: String = "Document", filePath: URL? = nil) -> (URL?, Int) {
+    public func scanDocumentAndSaveFile(resolution: Int? = nil, colorMode: String? = nil, format: String = "application/pdf", source: String = "Platen", width: Int? = nil, height: Int? = nil, XOffset: Int? = nil, YOffset: Int? = nil, intent: String? = nil, colorSpace: String? = nil, ccdChannel: String? = nil, contentType: String? = nil, brightness: Int? = nil, compressionFactor: Int? = nil, contrast: Int? = nil, sharpen: Int? = nil, threshold: Int? = nil, filePath: URL? = nil) -> (URL?, Int) {
         
         let status = self.getStatus()
         if status != ScannerStatus.Idle {
@@ -443,7 +485,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             return (nil, 503)
         }
         
-        let (url, postResponse) = self.sendPostRequest(resolution: resolution, colorMode: colorMode, format: format, source: source, width: width, height: height, intent: intent)
+        let (url, postResponse) = self.sendPostRequest(resolution: resolution, colorMode: colorMode, format: format, source: source, width: width, height: height, XOffset: XOffset, YOffset: YOffset, intent: intent, colorSpace: colorSpace, ccdChannel: ccdChannel, contentType: contentType, brightness: brightness, compressionFactor: compressionFactor, contrast: contrast, sharpen: sharpen, threshold: threshold)
         
         if postResponse != 201 {
             print("Scanner didn't accept the job. \(postResponse)")

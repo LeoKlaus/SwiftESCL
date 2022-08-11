@@ -40,13 +40,12 @@ Create an instance of eSCLScanner() and use the methods getCapabilities() and ge
 // Let's just access the first device found
 let scannerRep = discoveredDevices.values.first!
 let scanner = SwiftESCL.esclScanner(ip: scannerRep.hostname, root: scannerRep.root)
-
-let capabilities = scanner.getCapabilities()
+// From V1.2 on, every esclScanner object queries its capabilities on initialisation. Capabilities are stored in the public variable scanner.
 // You can now browse your scanners capabilities:
-print(capabilities.sourceCapabilities.keys)
+print(scanner.scanner.sourceCapabilities.keys)
 // This will print an array containing all source supported by your scanner, for example:
 // ["Adf", "Platen"]
-print(capabilities.sourceCapabilities["Adf"]?.discreteResolutions)
+print(scanner.scanner.sourceCapabilities["Adf"]?.discreteResolutions)
 // Would list all resolutions supported by your scanners ADF, for example:
 // ["100", "200", "300", "600"]
 
@@ -58,7 +57,7 @@ let status = scanner.getStatus()
 
 Use the sendPostRequest method to create a POST request:
 ```swift
-let (responseURL, postResponseCode) = scanner.sendPostRequest(resolution: "300", format: "application/pdf", version: capabilities.version, source: "Platen", width: 2480, height: 3508)
+let (responseURL, postResponseCode) = scanner.sendPostRequest(resolution: "300", format: "application/pdf", source: "Platen", width: 2480, height: 3508)
 // responseURL contains the URL to the document on the scanner, this is where you will derict your GET request to.
 // postResponseCode should be 201 (CREATED). If it isn't, there's likely an invalid mix of options and the scanner returned 409 (CONFLICT)
 ```

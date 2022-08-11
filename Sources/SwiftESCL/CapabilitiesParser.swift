@@ -16,16 +16,21 @@ public struct Scanner {
     public var makeAndModel: String = ""
     // This contains the capabilities of each source.
     public var sourceCapabilities: [String: Capabilities] = [:]
+    public var minWidth: Int = 0
+    public var maxWidth: Int = 2550
+    public var minHeight: Int = 0
+    public var maxHeight: Int = 3510
+    public var brightnessSupport: Support = Support()
+    public var compressionFactorSupport: Support = Support()
+    public var contrastSupport: Support = Support()
+    public var sharpenSupport: Support = Support()
+    public var thresholdSupport: Support = Support()
 }
 
 /**
  An object representing the capabilites of a single source on a scanner.
  */
 public struct Capabilities {
-    public var minWidth: String = ""
-    public var maxWidth: String = ""
-    public var minHeight: String = ""
-    public var maxHeight: String = ""
     public var colorModes: [String] = []
     public var documentFormats: [String] = []
     public var supportedResolutions: [Int] = []
@@ -33,11 +38,6 @@ public struct Capabilities {
     public var colorSpaces: [String] = []
     public var ccdChannels: [String] = []
     public var contentTypes: [String] = []
-    public var brightnessSupport: Support = Support()
-    public var compressionFactorSupport: Support = Support()
-    public var contrastSupport: Support = Support()
-    public var sharpenSupport: Support = Support()
-    public var thresholdSupport: Support = Support()
 }
 
 public struct Support {
@@ -152,13 +152,13 @@ extension CapabilityParser: XMLParserDelegate {
         case "scan:camera":
             self.scanner.sourceCapabilities["Camera"] = self.capabilities
         case "scan:MinWidth":
-            self.capabilities.minWidth = textBuffer
+            self.scanner.minWidth = Int(textBuffer) ?? 0
         case "scan:MaxWidth":
-            self.capabilities.maxWidth = textBuffer
+            self.scanner.maxWidth = Int(textBuffer) ?? 2550
         case "scan:MinHeight":
-            self.capabilities.minHeight = textBuffer
+            self.scanner.minHeight = Int(textBuffer) ?? 0
         case "scan:MaxHeight":
-            self.capabilities.maxHeight = textBuffer
+            self.scanner.maxHeight = Int(textBuffer) ?? 3510
         case "scan:ColorMode":
             self.capabilities.colorModes.append(textBuffer)
         case "pwg:DocumentFormat":
@@ -174,15 +174,15 @@ extension CapabilityParser: XMLParserDelegate {
         case "pwg:ContentType":
             self.capabilities.contentTypes.append(textBuffer)
         case "scan:BrightnessSupport":
-            self.capabilities.brightnessSupport = self.support
+            self.scanner.brightnessSupport = self.support
         case "scan:CompressionFactorSupport":
-            self.capabilities.compressionFactorSupport = self.support
+            self.scanner.compressionFactorSupport = self.support
         case "scan:ContrastSupport":
-            self.capabilities.contrastSupport = self.support
+            self.scanner.contrastSupport = self.support
         case "scan:SharpenSupport":
-            self.capabilities.sharpenSupport = self.support
+            self.scanner.sharpenSupport = self.support
         case "scan:ThresholdSupport":
-            self.capabilities.thresholdSupport = self.support
+            self.scanner.thresholdSupport = self.support
         case "scan:Min":
             self.support.min = Int(textBuffer) ?? 0
         case "scan:Max":
