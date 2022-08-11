@@ -15,9 +15,12 @@ import Combine
  */
 public class esclScanner: NSObject, URLSessionDelegate {
     var baseURI: String
-
+    public var scanner: Scanner = Scanner()
+    
     public init(ip: String, root: String) {
         self.baseURI = "https://\(ip)/\(root)/"
+        super.init()
+        _ = self.getCapabilities()
     }
 
     public enum ScannerStatus {
@@ -71,6 +74,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
         
         task.resume()
         sem.wait()
+        self.scanner = capabilities
         return capabilities
     }
     
@@ -193,7 +197,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
      - Parameter intent: This helps the scanner auto-determine settings for the scan. Technically, version and intent should suffice for a valid request. To my understanding, the defaults set by an intent are ignored as soon as values are provided.
      - Returns: A tuple containing the the URL to the scan and the response code of the last request (which should be 200).
      */
-    public func sendPostRequest(resolution: String = "300", colorMode: String = "RGB24", format: String = "application/pdf", version: String = "2.5", source: String = "Platen", width: Int = 2480, height: Int = 3508, XOffset: String = "0", YOffset: String = "0", intent: String = "Document") -> (String, Int) {
+    public func sendPostRequest(resolution: Int? = nil, colorMode: String? = nil, format: String? = nil, source: String = "Platen", width: Int = 2480, height: Int = 3508, XOffset: Int = 0, YOffset: Int = 0, intent: String? = nil, colorSpace: String? = nil, ccdChannel: String? = nil, contentType: String? = nil, brightness: Int? = nil, compressionFactor: Int? = nil, contrast: Int? = nil, sharpen: Int? = nil, threshold: Int? = nil) -> (String, Int) {
 
         var urlRequest = URLRequest(url: URL(string: self.baseURI+"ScanJobs")!)
         
@@ -215,28 +219,127 @@ public class esclScanner: NSObject, URLSessionDelegate {
         else {
             fuckYouMopriaForMakingThisSoComplicated = source
         }
-        
+        if self.scanner.sourceCapabilities[source] == nil {
+            print("Invalid source selected")
+            return ("",409)
+        }
+        let sourceCapabilities = self.scanner.sourceCapabilities[source]!
         // The base structure of the body
-        let body = """
+        var body = """
     <scan:ScanSettings xmlns:pwg="http://www.pwg.org/schemas/2010/12/sm" xmlns:scan="http://schemas.hp.com/imaging/escl/2011/05/03">
-      <pwg:Version>\(version)</pwg:Version>
-      <scan:Intent>\(intent)</scan:Intent>
-      <pwg:ScanRegions>
-        <pwg:ScanRegion>
-          <pwg:XOffset>\(XOffset)</pwg:XOffset>
-          <pwg:YOffset>\(YOffset)</pwg:YOffset>
-          <pwg:Width>\(width)</pwg:Width>
-          <pwg:Height>\(height)</pwg:Height>
-          <pwg:ContentRegionUnits>escl:ThreeHundredthsOfInches</pwg:ContentRegionUnits>
-        </pwg:ScanRegion>
-      </pwg:ScanRegions>
+      <pwg:Version>\(self.scanner.version)</pwg:Version>
+          <pwg:ScanRegions>
+            <pwg:ScanRegion>
+              <pwg:XOffset>\(XOffset)</pwg:XOffset>
+              <pwg:YOffset>\(YOffset)</pwg:YOffset>
+              <pwg:Width>\(width)</pwg:Width>
+              <pwg:Height>\(height)</pwg:Height>
+              <pwg:ContentRegionUnits>escl:ThreeHundredthsOfInches</pwg:ContentRegionUnits>
+            </pwg:ScanRegion>
+          </pwg:ScanRegions>
       <pwg:InputSource>\(fuckYouMopriaForMakingThisSoComplicated)</pwg:InputSource>
-      <pwg:DocumentFormat>\(format)</pwg:DocumentFormat>
-      <scan:ColorMode>\(colorMode)</scan:ColorMode>
-      <scan:XResolution>\(resolution)</scan:XResolution>
-      <scan:YResolution>\(resolution)</scan:YResolution>
-    </scan:ScanSettings>
     """
+        
+        if intent != nil {
+            if sourceCapabilities.supportedIntents.contains(intent!) {
+                body.append("\n<scan:Intent>\(intent!)</scan:Intent>")
+            } else {
+                print("Intent \(intent!) is not supported by the scanner. Ignoring this parameter.")
+            }
+        }
+        
+        if format != nil {
+            if sourceCapabilities.documentFormats.contains(format!) {
+                body.append("\n<pwg:DocumentFormat>\(format!)</pwg:DocumentFormat>")
+            } else {
+                print("Format \(format!) is not supported by the scanner. Ignoring this parameter.")
+            }
+        }
+        
+        if colorMode != nil {
+            if sourceCapabilities.colorModes.contains(colorMode!) {
+                body.append("\n<scan:ColorMode>\(colorMode!)</scan:ColorMode>")
+            } else {
+                print("Color mode \(colorMode!) is not supported by the scanner. Ignoring this parameter.")
+            }
+        }
+        
+        if resolution != nil {
+            if sourceCapabilities.supportedResolutions.contains(resolution!) {
+                body.append("\n<scan:XResolution>\(resolution!)</scan:XResolution>\n<scan:YResolution>\(resolution!)</scan:YResolution>")
+            } else {
+                print("Resolution \(resolution!) is not supported by the scanner. Ignoring this parameter.")
+            }
+        }
+        
+        //colorSpace: String? = nil, ccdChannel: String? = nil, contentType: String? = nil, brightness: Int? = nil, compressionFactor: Int? = nil, contrast: Int? = nil, sharpen: Int? = nil, threshold: Int? = nil
+        if colorSpace != nil {
+            if sourceCapabilities.colorSpaces.contains(colorSpace!) {
+                body.append("\n<scan:ColorSpace>\(colorSpace!)</scan:ColorSpace>")
+            } else {
+                print("Color space \(colorSpace!) is not supported by the scanner. Ignoring this parameter.")
+            }
+        }
+        
+        if ccdChannel != nil {
+            if sourceCapabilities.ccdChannels.contains(ccdChannel!) {
+                body.append("\n<scan:CcdChannel>\(ccdChannel!)</scan:CcdChannel>")
+            } else {
+                print("CCD-Channel \(ccdChannel!) is not supported by the scanner. Ignoring this parameter.")
+            }
+        }
+        
+        if contentType != nil {
+            if sourceCapabilities.contentTypes.contains(contentType!) {
+                body.append("\n<pwg:ContentType>\(contentType!)</pwg:ContentType>")
+            } else {
+                print("Content type \(contentType!) is not supported by the scanner. Ignoring this parameter.")
+            }
+        }
+        
+        if brightness != nil {
+            if sourceCapabilities.brightnessSupport.min < brightness! && brightness! < sourceCapabilities.brightnessSupport.max {
+                body.append("\n<scan:Brightness>\(brightness!)</scan:Brightness>")
+            } else {
+                print("Brightness setting \(brightness!) is not supported by the scanner. Ignoring this parameter.")
+            }
+        }
+        
+        if compressionFactor != nil {
+            if sourceCapabilities.compressionFactorSupport.min < compressionFactor! && compressionFactor! < sourceCapabilities.compressionFactorSupport.max {
+                body.append("\n<scan:CompressionFactor>\(compressionFactor!)</scan:CompressionFactor>")
+            } else {
+                print("Compression factor \(compressionFactor!) is not supported by the scanner. Ignoring this parameter.")
+            }
+        }
+        
+        if contrast != nil {
+            if sourceCapabilities.contrastSupport.min < contrast! && contrast! < sourceCapabilities.contrastSupport.max {
+                body.append("\n<scan:Contrast>\(contrast!)</scan:Contrast>")
+            } else {
+                print("Contrast setting \(contrast!) is not supported by the scanner. Ignoring this parameter.")
+            }
+        }
+        
+        if sharpen != nil {
+            if sourceCapabilities.sharpenSupport.min < sharpen! && sharpen! < sourceCapabilities.sharpenSupport.max {
+                body.append("\n<scan:Sharpen>\(sharpen!)</scan:Sharpen>")
+            } else {
+                print("Sharpen setting \(sharpen!) is not supported by the scanner. Ignoring this parameter.")
+            }
+        }
+        
+        if threshold != nil {
+            if sourceCapabilities.thresholdSupport.min < threshold! && threshold! < sourceCapabilities.thresholdSupport.max {
+                body.append("\n<scan:Threshold>\(threshold!)</scan:Threshold>")
+            } else {
+                print("Threshold \(threshold!) is not supported by the scanner. Ignoring this parameter.")
+            }
+        }
+        
+        body.append("\n</scan:ScanSettings>")
+        
+        print("created body:\n\(body)")
         
         urlRequest.httpBody = body.data(using: .utf8)
         
@@ -289,7 +392,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
      - Parameter intent: This helps the scanner auto-determine settings for the scan. Technically, version and intent should suffice for a valid request. To my understanding, the defaults set by an intent are ignored as soon as values are provided.
      - Returns: A tuple containing the Binary Data of the scanned image and the last http response code
      */
-    public func scanDocument(resolution: String = "300", colorMode: String = "RGB24", format: String = "application/pdf", version: String = "2.5", source: String = "Platen", width: Int = 2480, height: Int = 3508, XOffset: String = "0", YOffset: String = "0", intent: String = "Document") -> (Data,Int) {
+    public func scanDocument(resolution: Int? = nil, colorMode: String = "RGB24", format: String = "application/pdf", version: String = "2.5", source: String = "Platen", width: Int = 2480, height: Int = 3508, XOffset: String = "0", YOffset: String = "0", intent: String = "Document") -> (Data,Int) {
         
         var data = Data()
         
@@ -298,7 +401,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             return (data, 503)
         }
         
-        let (url, postResponse) = self.sendPostRequest(resolution: resolution, colorMode: colorMode, format: format, version: version, source: source, width: width, height: height, intent: intent)
+        let (url, postResponse) = self.sendPostRequest(resolution: resolution, colorMode: colorMode, format: format, source: source, width: width, height: height, intent: intent)
         
         if postResponse != 201 {
             print("Scanner didn't accept the job. \(postResponse)")
@@ -332,7 +435,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
      - Parameter filePath: Path at which the file should be stored. If not specified, the file will be stored in the document root under the name "scan-YY-MM-dd-HH-mm-ss.fileExtension"
      - Returns: A tuple containing the URL to the file created and the last http response code
      */
-    public func scanDocumentAndSaveFile(resolution: String = "300", colorMode: String = "RGB24", format: String = "application/pdf", version: String, source: String = "Platen", width: Int = 2480, height: Int = 3508, XOffset: Int = 0, YOffset: Int = 0, intent: String = "Document", filePath: URL? = nil) -> (URL?, Int) {
+    public func scanDocumentAndSaveFile(resolution: Int? = nil, colorMode: String = "RGB24", format: String = "application/pdf", version: String, source: String = "Platen", width: Int = 2480, height: Int = 3508, XOffset: Int = 0, YOffset: Int = 0, intent: String = "Document", filePath: URL? = nil) -> (URL?, Int) {
         
         let status = self.getStatus()
         if status != ScannerStatus.Idle {
@@ -340,7 +443,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             return (nil, 503)
         }
         
-        let (url, postResponse) = self.sendPostRequest(resolution: resolution, colorMode: colorMode, format: format, version: version, source: source, width: width, height: height, intent: intent)
+        let (url, postResponse) = self.sendPostRequest(resolution: resolution, colorMode: colorMode, format: format, source: source, width: width, height: height, intent: intent)
         
         if postResponse != 201 {
             print("Scanner didn't accept the job. \(postResponse)")

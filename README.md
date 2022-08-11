@@ -27,18 +27,18 @@ let browser = SwiftESCL.Browser()
 @State var discoveredDevices: [String:SwiftESCL.ScannerRepresentation] = [:]
 // As the discovery runs asynchronously, it's easiest to just pass the dictionary as binding
 browser.setDevices(scanners: $discoveredDevices)
-```
-Now you just have to start the browser to discover devices:
-```swift
+// Now you just have to start the browser to discover devices:
 browser.start()
+// Keep in mind that the start() function runs asynchronously, discoveredDevices is still empty at this point.
+// It makes sense to call browser.start() on view load or by press of a button and have the user wait for device discovery
 ```
 
 ### 2. Querying capabilities and status of a device
 
 Create an instance of eSCLScanner() and use the methods getCapabilities() and getStatus():
 ```swift
-// Assuming your scanner has the IP 192.168.1.123 (you could obviously iterate over discoveredDevices to get all scanners)
-let scannerRep = discoveredDevices["192.168.1.123"]
+// Let's just access the first device found
+let scannerRep = discoveredDevices.values.first!
 let scanner = SwiftESCL.esclScanner(ip: scannerRep.hostname, root: scannerRep.root)
 
 let capabilities = scanner.getCapabilities()

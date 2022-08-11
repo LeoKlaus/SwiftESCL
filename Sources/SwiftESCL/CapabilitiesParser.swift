@@ -28,8 +28,23 @@ public struct Capabilities {
     public var maxHeight: String = ""
     public var colorModes: [String] = []
     public var documentFormats: [String] = []
-    public var discreteResolutions: [String] = []
+    public var supportedResolutions: [Int] = []
     public var supportedIntents: [String] = []
+    public var colorSpaces: [String] = []
+    public var ccdChannels: [String] = []
+    public var contentTypes: [String] = []
+    public var brightnessSupport: Support = Support()
+    public var compressionFactorSupport: Support = Support()
+    public var contrastSupport: Support = Support()
+    public var sharpenSupport: Support = Support()
+    public var thresholdSupport: Support = Support()
+}
+
+public struct Support {
+    public var min: Int = 0
+    public var max: Int = 0
+    public var normal: Int = 0
+    public var step: Int = 0
 }
 
 /**
@@ -41,6 +56,7 @@ class CapabilityParser: XMLParser {
     var capabilities = Capabilities()
     
     private var textBuffer: String = ""
+    private var support: Support = Support()
     override init(data: Data) {
         super.init(data: data)
         self.delegate = self
@@ -86,6 +102,30 @@ extension CapabilityParser: XMLParserDelegate {
             textBuffer = ""
         case "scan:Intent":
             textBuffer = ""
+        case "scan:ColorSpace":
+            textBuffer = ""
+        case "scan:CcdChannel":
+            textBuffer = ""
+        case "pwg:ContentType":
+            textBuffer = ""
+        case "scan:BrightnessSupport":
+            support = Support()
+        case "scan:CompressionFactorSupport":
+            support = Support()
+        case "scan:ContrastSupport":
+            support = Support()
+        case "scan:SharpenSupport":
+            support = Support()
+        case "scan:ThresholdSupport":
+            support = Support()
+        case "scan:Min":
+            textBuffer = ""
+        case "scan:Max":
+            textBuffer = ""
+        case "scan:Normal":
+            textBuffer = ""
+        case "scan:Step":
+            textBuffer = ""
         default:
             //print("Ignoring \(elementName)")
             break
@@ -124,9 +164,33 @@ extension CapabilityParser: XMLParserDelegate {
         case "pwg:DocumentFormat":
             self.capabilities.documentFormats.append(textBuffer)
         case "scan:XResolution":
-            self.capabilities.discreteResolutions.append(textBuffer)
+            self.capabilities.supportedResolutions.append(Int(textBuffer)!)
         case "scan:Intent":
             self.capabilities.supportedIntents.append(textBuffer)
+        case "scan:ColorSpace":
+            self.capabilities.colorSpaces.append(textBuffer)
+        case "scan:CcdChannel":
+            self.capabilities.ccdChannels.append(textBuffer)
+        case "pwg:ContentType":
+            self.capabilities.contentTypes.append(textBuffer)
+        case "scan:BrightnessSupport":
+            self.capabilities.brightnessSupport = self.support
+        case "scan:CompressionFactorSupport":
+            self.capabilities.compressionFactorSupport = self.support
+        case "scan:ContrastSupport":
+            self.capabilities.contrastSupport = self.support
+        case "scan:SharpenSupport":
+            self.capabilities.sharpenSupport = self.support
+        case "scan:ThresholdSupport":
+            self.capabilities.thresholdSupport = self.support
+        case "scan:Min":
+            self.support.min = Int(textBuffer) ?? 0
+        case "scan:Max":
+            self.support.max = Int(textBuffer) ?? 0
+        case "scan:Normal":
+            self.support.normal = Int(textBuffer) ?? 0
+        case "scan:Step":
+            self.support.step = Int(textBuffer) ?? 0
         default:
             //print("Ignoring \(elementName)")
             break
