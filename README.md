@@ -1,8 +1,9 @@
 #  SwiftESCL
 
 I needed a Swift implementation of the eSCL protocol for another project and I now want to open source this.
+If you wan't to see a more complete project using this package, check out my other project [OpenAirScan](https://github.com/LeoKlaus/OpenAirScan).
 
-## Using the API
+## Using the package
 
 I tried my best document the code, so I recommend to just try using it. I'll still try to describe the most basic tasks here.
 I recommend to have the documentation for the actual eSCL protocol handy while working with this. You can find it [here](https://mopria.org/spec-download).
