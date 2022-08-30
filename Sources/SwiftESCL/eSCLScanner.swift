@@ -430,7 +430,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
         
         var data = Data()
         
-        if getStatus() == ScannerStatus.Idle {
+        if getStatus() != ScannerStatus.Idle {
             print("Scanner is not idle but \(getStatus())")
             return (data, 503)
         }
