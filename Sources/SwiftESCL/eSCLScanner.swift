@@ -502,7 +502,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             (data, responseCode) = self.sendGetRequest(uri: url)
             print(responseCode)
             if responseCode == 410 {
-                return(data, postResponse)
+                return(nil, postResponse)
             }
         }
         // My scanners won't reach idle after completing a scan without this
