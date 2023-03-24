@@ -74,11 +74,14 @@ public class Browser {
     /**
      Create a new browser without a binding dictionary. Calling start() on this won't do anything.
      */
-    public init() {
+    public init(usePlainText: Bool = false) {
         let parameters = NWParameters()
         parameters.includePeerToPeer = true
-
-        browser = NWBrowser(for: .bonjourWithTXTRecord(type: "_uscan._tcp", domain: nil), using: parameters)
+        if usePlainText {
+            browser = NWBrowser(for: .bonjourWithTXTRecord(type: "_uscan._tcp", domain: nil), using: parameters)
+        } else {
+            browser = NWBrowser(for: .bonjourWithTXTRecord(type: "_uscans._tcp", domain: nil), using: parameters)
+        }
         self.scanners = nil
     }
     

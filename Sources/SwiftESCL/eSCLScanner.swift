@@ -16,9 +16,15 @@ import Combine
 public class esclScanner: NSObject, URLSessionDelegate {
     var baseURI: String
     public var scanner: Scanner = Scanner()
+    private var usePlainText: Bool = false
     
-    public init(ip: String, root: String) {
-        self.baseURI = "https://\(ip)/\(root)/"
+    public init(ip: String, root: String, usePlainText: Bool = false) {
+        if usePlainText {
+            self.baseURI = "http://\(ip)/\(root)/"
+            self.usePlainText = true
+        } else {
+            self.baseURI = "https://\(ip)/\(root)/"
+        }
         super.init()
         self.getCapabilities()
     }
@@ -391,9 +397,12 @@ public class esclScanner: NSObject, URLSessionDelegate {
                 return
             }
             
-            // The scanner returns the url to the document under the "Location" header. One of the devices I tested with returned the location with "http" as the protocol even though eSCL requires HTTPS
-            // So apparantly, these things can't be trusted
-            responseURL = (response.allHeaderFields["Location"] as! String).replacingOccurrences(of: "http:", with: "https:") + "/NextDocument"
+            // The scanner returns the url to the document under the "Location" header. One of the devices I tested with returned the location with "http" as the protocol even though request were made using HTTPS
+            if self.usePlainText {
+                responseURL = (response.allHeaderFields["Location"] as! String) + "/NextDocument"
+            } else {
+                responseURL = (response.allHeaderFields["Location"] as! String).replacingOccurrences(of: "http:", with: "https:") + "/NextDocument"
+            }
             responseCode = response.statusCode
             print("Location: \(responseURL)")
         }
