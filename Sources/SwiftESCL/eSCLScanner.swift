@@ -47,6 +47,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
         var urlRequest = URLRequest(url: URL(string: self.baseURI + "ScannerCapabilities")!)
         
         urlRequest.httpMethod = "GET"
+        urlRequest.addValue("application/xml", forHTTPHeaderField: "Accept")
         
         let configuration = URLSessionConfiguration.default
         
@@ -93,6 +94,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
         var urlRequest = URLRequest(url: URL(string: self.baseURI + "ScannerStatus")!)
         
         urlRequest.httpMethod = "GET"
+        urlRequest.addValue("application/xml", forHTTPHeaderField: "Accept")
         
         let configuration = URLSessionConfiguration.default
         
