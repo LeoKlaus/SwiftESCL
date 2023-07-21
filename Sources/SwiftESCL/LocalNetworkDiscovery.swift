@@ -9,6 +9,7 @@
 import Foundation
 import Network
 import SwiftUI
+import os
 
 /**
  An object storing the attributes of a single scanner.
@@ -71,6 +72,11 @@ public class Browser {
     /// A dictionary in the format [hostname:ScannerRepresentation] of discovered devices.
     var scanners: Binding<[String:ScannerRepresentation]>?
 
+    private static let logger = Logger(
+            subsystem: Bundle.main.bundleIdentifier!,
+            category: String(describing: Browser.self)
+        )
+    
     /**
      Create a new browser without a binding dictionary. Calling start() on this won't do anything.
      */
@@ -98,7 +104,7 @@ public class Browser {
      */
     public func start() {
         browser.stateUpdateHandler = { newState in
-            print("browser.stateUpdateHandler \(newState)")
+            Browser.logger.info("Browser: browser.stateUpdateHandler \(String(describing: newState))")
         }
         
         browser.browseResultsChangedHandler = { results, changes in
@@ -112,9 +118,9 @@ public class Browser {
                     self.scanners![scanner.hostname].wrappedValue = scanner
                     
                 case .none:
-                    print("Record: none")
+                    Browser.logger.info("Browser: Record: none")
                 @unknown default:
-                    print("Record: default")
+                    Browser.logger.info("Browser: Record: default")
                 }
             }
         }
