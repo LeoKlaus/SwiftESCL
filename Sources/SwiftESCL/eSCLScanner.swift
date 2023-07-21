@@ -68,15 +68,15 @@ public class esclScanner: NSObject, URLSessionDelegate {
                 let response = response as? HTTPURLResponse,
                 error == nil
             else {
-                esclScanner.logger.error("Capabilities: Couldn't get capabilities from device \(self.scanner.makeAndModel): \(error)")
+                esclScanner.logger.error("Capabilities: Couldn't get capabilities from device \(self.scanner.makeAndModel, privacy: .public): \(error.debugDescription, privacy: .public)")
                 if let url = urlRequest.url?.absoluteString {
-                    esclScanner.logger.error("Capabilities: Queried URL: \(url)")
+                    esclScanner.logger.error("Capabilities: Queried URL: \(url, privacy: .public)")
                 }
                 return
             }
             
             guard(200 ... 299) ~= response.statusCode else {
-                esclScanner.logger.error("Capabilities: Received invalid response from device: \(response.statusCode)")
+                esclScanner.logger.error("Capabilities: Received invalid response from device: \(String(response.statusCode), privacy: .public)")
                 return
             }
             
@@ -84,17 +84,17 @@ public class esclScanner: NSObject, URLSessionDelegate {
             let success:Bool = parser.parse()
             if success {
                 capabilities = parser.scanner
-                esclScanner.logger.info("Capabilities: Success. Capabilities for device \(self.scanner.makeAndModel) parsed!")
+                esclScanner.logger.info("Capabilities: Success. Capabilities for device \(self.scanner.makeAndModel, privacy: .public) parsed!")
             } else {
-                esclScanner.logger.error("Capabilities: Encountered an error while parsing capabilities: \(parser.parserError)")
+                esclScanner.logger.error("Capabilities: Encountered an error while parsing capabilities: \(parser.parserError.debugDescription, privacy: .public)")
                 if let stringResponse = String(data: data, encoding: .utf8) {
-                    esclScanner.logger.error("Device response: \(stringResponse)")
+                    esclScanner.logger.error("Device response: \(stringResponse, privacy: .public)")
                 }
             }
         }
         
         
-        esclScanner.logger.info("Capabilities: Querying capabilities for device \(self.scanner.makeAndModel)...")
+        esclScanner.logger.info("Capabilities: Querying capabilities for device \(self.scanner.makeAndModel, privacy: .public)...")
         
         task.resume()
         sem.wait()
@@ -127,15 +127,15 @@ public class esclScanner: NSObject, URLSessionDelegate {
                 let response = response as? HTTPURLResponse,
                 error == nil
             else {
-                esclScanner.logger.error("Capabilities: Couldn't get capabilities from device \(self.scanner.makeAndModel): \(error)")
+                esclScanner.logger.error("Capabilities: Couldn't get capabilities from device \(self.scanner.makeAndModel, privacy: .public): \(error)")
                 if let url = urlRequest.url?.absoluteString {
-                    esclScanner.logger.error("Capabilities: Queried URL: \(url)")
+                    esclScanner.logger.error("Capabilities: Queried URL: \(url, privacy: .public)")
                 }
                 return
             }
             
             guard(200 ... 299) ~= response.statusCode else {
-                esclScanner.logger.error("Status: Received invalid response from device: \(response.statusCode)")
+                esclScanner.logger.error("Status: Received invalid response from device: \(String(response.statusCode), privacy: .public)")
                 return
             }
             
@@ -166,7 +166,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             }
         }
         
-        esclScanner.logger.info("Status: Querying status for device \(self.scanner.makeAndModel)...")
+        esclScanner.logger.info("Status: Querying status for device \(self.scanner.makeAndModel, privacy: .public)...")
         
         task.resume()
         sem.wait()
@@ -199,7 +199,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
                 let response = response as? HTTPURLResponse,
                 error == nil
             else {
-                esclScanner.logger.error("GetRequest: Couldn't get capabilities from device \(self.scanner.makeAndModel): \(error)")
+                esclScanner.logger.error("GetRequest: Couldn't get capabilities from device \(self.scanner.makeAndModel, privacy: .public): \(error)")
                 if let url = urlRequest.url?.absoluteString {
                     esclScanner.logger.error("GetRequest: Queried URL: \(url)")
                 }
@@ -207,7 +207,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             }
             responseCode = response.statusCode
             guard(200 ... 299) ~= response.statusCode else {
-                esclScanner.logger.error("GetRequest: Received invalid response from device: \(response.statusCode)")
+                esclScanner.logger.error("GetRequest: Received invalid response from device: \(String(response.statusCode), privacy: .public)")
                 return
             }
             esclScanner.logger.info("GetRequest: Request finished, received \(data.count) bytes")
@@ -264,7 +264,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             fuckYouMopriaForMakingThisSoComplicated = source
         }
         if self.scanner.sourceCapabilities[source] == nil {
-            esclScanner.logger.error("PostRequest: The selected source \"\(source)\" is not supported by the scanner, aborting...")
+            esclScanner.logger.error("PostRequest: The selected source \"\(source , privacy: .public)\" is not supported by the scanner, aborting...")
             return ("",409)
         }
         let sourceCapabilities = self.scanner.sourceCapabilities[source]!
@@ -281,13 +281,13 @@ public class esclScanner: NSObject, URLSessionDelegate {
             if width! <= self.scanner.maxWidth && width! >= self.scanner.minWidth {
                 body.append("\n<pwg:Width>\(width!)</pwg:Width>")
             } else {
-                esclScanner.logger.warning("PostRequest: Width \(width!) is not supported by the scanner. Ignoring this parameter.")
+                esclScanner.logger.warning("PostRequest: Width \(width!, privacy: .public) is not supported by the scanner. Ignoring this parameter.")
             }
             
             if height! <= self.scanner.maxHeight && height! >= self.scanner.minHeight {
                 body.append("\n<pwg:Height>\(height!)</pwg:Height>")
             } else {
-                esclScanner.logger.warning("PostRequest: Height \(height!) is not supported by the scanner. Ignoring this parameter.")
+                esclScanner.logger.warning("PostRequest: Height \(height!, privacy: .public) is not supported by the scanner. Ignoring this parameter.")
             }
             
             if XOffset != nil {
@@ -309,7 +309,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             if sourceCapabilities.supportedIntents.contains(intent!) {
                 body.append("\n<scan:Intent>\(intent!)</scan:Intent>")
             } else {
-                esclScanner.logger.warning("PostRequest: Intent \(intent!) is not supported by the scanner. Ignoring this parameter.")
+                esclScanner.logger.warning("PostRequest: Intent \(intent!, privacy: .public) is not supported by the scanner. Ignoring this parameter.")
             }
         }
         
@@ -317,7 +317,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             if sourceCapabilities.documentFormats.contains(format!) {
                 body.append("\n<pwg:DocumentFormat>\(format!)</pwg:DocumentFormat>")
             } else {
-                esclScanner.logger.warning("PostRequest: Format \(format!) is not supported by the scanner. Ignoring this parameter.")
+                esclScanner.logger.warning("PostRequest: Format \(format!, privacy: .public) is not supported by the scanner. Ignoring this parameter.")
             }
         }
         
@@ -325,7 +325,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             if sourceCapabilities.colorModes.contains(colorMode!) {
                 body.append("\n<scan:ColorMode>\(colorMode!)</scan:ColorMode>")
             } else {
-                esclScanner.logger.warning("PostRequest: Color mode \(colorMode!) is not supported by the scanner. Ignoring this parameter.")
+                esclScanner.logger.warning("PostRequest: Color mode \(colorMode!, privacy: .public) is not supported by the scanner. Ignoring this parameter.")
             }
         }
         
@@ -333,7 +333,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             if sourceCapabilities.supportedResolutions.contains(resolution!) {
                 body.append("\n<scan:XResolution>\(resolution!)</scan:XResolution>\n<scan:YResolution>\(resolution!)</scan:YResolution>")
             } else {
-                esclScanner.logger.warning("PostRequest: Resolution \(resolution!) is not supported by the scanner. Ignoring this parameter.")
+                esclScanner.logger.warning("PostRequest: Resolution \(resolution!, privacy: .public) is not supported by the scanner. Ignoring this parameter.")
             }
         }
         
@@ -342,7 +342,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             if sourceCapabilities.colorSpaces.contains(colorSpace!) {
                 body.append("\n<scan:ColorSpace>\(colorSpace!)</scan:ColorSpace>")
             } else {
-                esclScanner.logger.warning("PostRequest: Color space \(colorSpace!) is not supported by the scanner. Ignoring this parameter.")
+                esclScanner.logger.warning("PostRequest: Color space \(colorSpace!, privacy: .public) is not supported by the scanner. Ignoring this parameter.")
             }
         }
         
@@ -350,7 +350,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             if sourceCapabilities.ccdChannels.contains(ccdChannel!) {
                 body.append("\n<scan:CcdChannel>\(ccdChannel!)</scan:CcdChannel>")
             } else {
-                esclScanner.logger.warning("PostRequest: CCD-Channel \(ccdChannel!) is not supported by the scanner. Ignoring this parameter.")
+                esclScanner.logger.warning("PostRequest: CCD-Channel \(ccdChannel!, privacy: .public) is not supported by the scanner. Ignoring this parameter.")
             }
         }
         
@@ -358,7 +358,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             if sourceCapabilities.contentTypes.contains(contentType!) {
                 body.append("\n<pwg:ContentType>\(contentType!)</pwg:ContentType>")
             } else {
-                esclScanner.logger.warning("PostRequest: Content type \(contentType!) is not supported by the scanner. Ignoring this parameter.")
+                esclScanner.logger.warning("PostRequest: Content type \(contentType!, privacy: .public) is not supported by the scanner. Ignoring this parameter.")
             }
         }
         
@@ -366,7 +366,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             if self.scanner.brightnessSupport.min <= brightness! && brightness! <= self.scanner.brightnessSupport.max {
                 body.append("\n<scan:Brightness>\(brightness!)</scan:Brightness>")
             } else {
-                esclScanner.logger.warning("PostRequest: Brightness setting \(brightness!) is not supported by the scanner. Ignoring this parameter.")
+                esclScanner.logger.warning("PostRequest: Brightness setting \(brightness!, privacy: .public) is not supported by the scanner. Ignoring this parameter.")
             }
         }
         
@@ -374,7 +374,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             if self.scanner.compressionFactorSupport.min <= compressionFactor! && compressionFactor! <= self.scanner.compressionFactorSupport.max {
                 body.append("\n<scan:CompressionFactor>\(compressionFactor!)</scan:CompressionFactor>")
             } else {
-                esclScanner.logger.warning("PostRequest: Compression factor \(compressionFactor!) is not supported by the scanner. Ignoring this parameter.")
+                esclScanner.logger.warning("PostRequest: Compression factor \(compressionFactor!, privacy: .public) is not supported by the scanner. Ignoring this parameter.")
             }
         }
         
@@ -382,7 +382,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             if self.scanner.contrastSupport.min <= contrast! && contrast! <= self.scanner.contrastSupport.max {
                 body.append("\n<scan:Contrast>\(contrast!)</scan:Contrast>")
             } else {
-                esclScanner.logger.warning("PostRequest: Contrast setting \(contrast!) is not supported by the scanner. Ignoring this parameter.")
+                esclScanner.logger.warning("PostRequest: Contrast setting \(contrast!, privacy: .public) is not supported by the scanner. Ignoring this parameter.")
             }
         }
         
@@ -390,7 +390,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             if self.scanner.sharpenSupport.min <= sharpen! && sharpen! <= self.scanner.sharpenSupport.max {
                 body.append("\n<scan:Sharpen>\(sharpen!)</scan:Sharpen>")
             } else {
-                esclScanner.logger.warning("PostRequest: Sharpen setting \(sharpen!) is not supported by the scanner. Ignoring this parameter.")
+                esclScanner.logger.warning("PostRequest: Sharpen setting \(sharpen!, privacy: .public) is not supported by the scanner. Ignoring this parameter.")
             }
         }
         
@@ -398,13 +398,13 @@ public class esclScanner: NSObject, URLSessionDelegate {
             if self.scanner.thresholdSupport.min <= threshold! && threshold! <= self.scanner.thresholdSupport.max {
                 body.append("\n<scan:Threshold>\(threshold!)</scan:Threshold>")
             } else {
-                esclScanner.logger.warning("PostRequest: Threshold \(threshold!) is not supported by the scanner. Ignoring this parameter.")
+                esclScanner.logger.warning("PostRequest: Threshold \(threshold!, privacy: .public) is not supported by the scanner. Ignoring this parameter.")
             }
         }
         
         body.append("\n</scan:ScanSettings>")
         
-        esclScanner.logger.info("PostRequest: created body:\n\(body)")
+        esclScanner.logger.info("PostRequest: created body:\n\(body, privacy: .public)")
         
         
         urlRequest.httpBody = body.data(using: .utf8)
@@ -421,15 +421,15 @@ public class esclScanner: NSObject, URLSessionDelegate {
                 let response = response as? HTTPURLResponse,
                 error == nil
             else {
-                esclScanner.logger.error("PostRequest: Couldn't get capabilities from device \(self.scanner.makeAndModel): \(error)")
+                esclScanner.logger.error("PostRequest: Couldn't get capabilities from device \(self.scanner.makeAndModel, privacy: .public): \(error)")
                 if let url = urlRequest.url?.absoluteString {
-                    esclScanner.logger.error("PostRequest: Queried URL: \(url)")
+                    esclScanner.logger.error("PostRequest: Queried URL: \(url, privacy: .public)")
                 }
                 return
             }
             
             guard(200 ... 299) ~= response.statusCode else {
-                esclScanner.logger.error("PostRequest: Received invalid response from device: \(response.statusCode)")
+                esclScanner.logger.error("PostRequest: Received invalid response from device: \(response.statusCode, privacy: .public)")
                 responseCode = response.statusCode
                 return
             }
@@ -441,10 +441,10 @@ public class esclScanner: NSObject, URLSessionDelegate {
                 responseURL = (response.allHeaderFields["Location"] as! String).replacingOccurrences(of: "http:", with: "https:") + "/NextDocument"
             }
             responseCode = response.statusCode
-            esclScanner.logger.info("PostRequest: Request accepted! Location: \(responseURL)")
+            esclScanner.logger.info("PostRequest: Request accepted! Location: \(responseURL, privacy: .public)")
         }
         
-        esclScanner.logger.info("PostRequest: Sending request to \(self.scanner.makeAndModel)...")
+        esclScanner.logger.info("PostRequest: Sending request to \(self.scanner.makeAndModel, privacy: .public)...")
         
         task.resume()
         sem.wait()
@@ -479,14 +479,14 @@ public class esclScanner: NSObject, URLSessionDelegate {
         var data = Data()
         
         if getStatus() != ScannerStatus.Idle {
-            esclScanner.logger.warning("ScanDocument: Scanner is not idle but \(String(describing: self.getStatus()))")
+            esclScanner.logger.warning("ScanDocument: Scanner is not idle but \(String(describing: self.getStatus()), privacy: .public)")
             return (data, 503)
         }
         
         let (url, postResponse) = self.sendPostRequest(resolution: resolution, colorMode: colorMode, format: format, source: source, width: width, height: height, XOffset: XOffset, YOffset: YOffset, intent: intent, colorSpace: colorSpace, ccdChannel: ccdChannel, contentType: contentType, brightness: brightness, compressionFactor: compressionFactor, contrast: contrast, sharpen: sharpen, threshold: threshold)
         
         if postResponse != 201 {
-            esclScanner.logger.error("ScanDocument: Scanner didn't accept the job. \(postResponse)")
+            esclScanner.logger.error("ScanDocument: Scanner didn't accept the job. \(String(postResponse), privacy: .public)")
             return (data, postResponse)
         }
         
@@ -532,14 +532,14 @@ public class esclScanner: NSObject, URLSessionDelegate {
         
         let status = self.getStatus()
         if status != ScannerStatus.Idle {
-            esclScanner.logger.warning("ScanDocumentAndSave: Scanner is not idle but \(String(describing: status))")
+            esclScanner.logger.warning("ScanDocumentAndSave: Scanner is not idle but \(String(describing: status), privacy: .public)")
             return (nil, 503)
         }
         
         let (url, postResponse) = self.sendPostRequest(resolution: resolution, colorMode: colorMode, format: format, source: source, width: width, height: height, XOffset: XOffset, YOffset: YOffset, intent: intent, colorSpace: colorSpace, ccdChannel: ccdChannel, contentType: contentType, brightness: brightness, compressionFactor: compressionFactor, contrast: contrast, sharpen: sharpen, threshold: threshold)
         
         if postResponse != 201 {
-            esclScanner.logger.error("ScanDocumentAndSave: Scanner didn't accept the job. \(postResponse)")
+            esclScanner.logger.error("ScanDocumentAndSave: Scanner didn't accept the job. \(String(postResponse), privacy: .public)")
             return (nil, postResponse)
         }
         
@@ -548,7 +548,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
         while responseCode != 200 {
             sleep(2)
             (data, responseCode) = self.sendGetRequest(uri: url)
-            esclScanner.logger.info("ScanDocumentAndSave: Waiting for file, server returned: \(responseCode)")
+            esclScanner.logger.info("ScanDocumentAndSave: Waiting for file, server returned: \(String(responseCode), privacy: .public)")
             if responseCode == 410 {
                 return(nil, postResponse)
             }
