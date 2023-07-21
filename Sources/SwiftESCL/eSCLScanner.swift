@@ -201,7 +201,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             else {
                 esclScanner.logger.error("GetRequest: Couldn't get capabilities from device \(self.scanner.makeAndModel, privacy: .public): \(error)")
                 if let url = urlRequest.url?.absoluteString {
-                    esclScanner.logger.error("GetRequest: Queried URL: \(url)")
+                    esclScanner.logger.error("GetRequest: Queried URL: \(url, privacy: .public)")
                 }
                 return
             }
@@ -213,7 +213,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
             esclScanner.logger.info("GetRequest: Request finished, received \(data.count) bytes")
             imageData = data
         }
-        esclScanner.logger.info("GetRequest: Sending request to \(self.scanner.makeAndModel)...")
+        esclScanner.logger.info("GetRequest: Sending request to \(self.scanner.makeAndModel, privacy: .public)...")
         task.resume()
         sem.wait()
         return (imageData, responseCode)
