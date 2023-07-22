@@ -247,7 +247,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
         
         var responseCode: Int = 0
         urlRequest.httpMethod = "POST"
-        urlRequest.setValue("text/xml", forHTTPHeaderField: "Content-Type")
+        urlRequest.setValue("application/xml", forHTTPHeaderField: "Content-Type")
         
         var responseURL: String = ""
         
@@ -270,6 +270,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
         let sourceCapabilities = self.scanner.sourceCapabilities[source]!
         // The base structure of the body
         var body = """
+    <?xml version="1.0" encoding="UTF-8"?>
     <scan:ScanSettings xmlns:pwg="http://www.pwg.org/schemas/2010/12/sm" xmlns:scan="http://schemas.hp.com/imaging/escl/2011/05/03">
       <pwg:Version>\(self.scanner.version)</pwg:Version>
     """
