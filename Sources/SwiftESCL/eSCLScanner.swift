@@ -529,7 +529,7 @@ public class esclScanner: NSObject, URLSessionDelegate {
      - Parameter filePath: Path at which the file should be stored. If not specified, the file will be stored in the document root under the name "scan-YY-MM-dd-HH-mm-ss.fileExtension"
      - Returns: A tuple containing the URL to the file created and the last http response code
      */
-    public func scanDocumentAndSaveFile(resolution: Int? = nil, colorMode: String? = nil, format: String = "application/pdf", source: String = "Platen", width: Int? = nil, height: Int? = nil, XOffset: Int? = nil, YOffset: Int? = nil, intent: String? = nil, colorSpace: String? = nil, ccdChannel: String? = nil, contentType: String? = nil, brightness: Int? = nil, compressionFactor: Int? = nil, contrast: Int? = nil, sharpen: Int? = nil, threshold: Int? = nil, filePath: URL? = nil) -> (URL?, Int) {
+    public func scanDocumentAndSaveFile(resolution: Int? = nil, colorMode: String? = nil, format: String = "application/pdf", source: String = "Platen", width: Int? = nil, height: Int? = nil, XOffset: Int? = nil, YOffset: Int? = nil, intent: String? = nil, colorSpace: String? = nil, ccdChannel: String? = nil, contentType: String? = nil, brightness: Int? = nil, compressionFactor: Int? = nil, contrast: Int? = nil, sharpen: Int? = nil, threshold: Int? = nil, filePath: URL? = nil, overrideFilename: String? = nil) -> (URL?, Int) {
         
         let status = self.getStatus()
         if status != ScannerStatus.Idle {
@@ -564,8 +564,13 @@ public class esclScanner: NSObject, URLSessionDelegate {
             // This is just used for determinining a file name
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "YY-MM-dd-HH-mm-ss"
-            let filename = "scan-" + dateFormatter.string(from: Date()) + fileExtension
             
+            var filename: String
+            if let overrideFilename {
+                filename = overrideFilename+fileExtension
+            } else {
+                filename = "scan-" + dateFormatter.string(from: Date()) + fileExtension
+            }
             path = FileManager.default.urls(for: .documentDirectory,
                                                 in: .userDomainMask)[0].appendingPathComponent(filename)
         } else {
