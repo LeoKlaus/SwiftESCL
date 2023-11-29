@@ -492,13 +492,15 @@ public class esclScanner: NSObject, URLSessionDelegate {
         }
         
         var responseCode = 0
-        while responseCode != 200 {
+        var attempts = 0
+        while !(200...299 ~= responseCode) && attempts < 90 {
             sleep(2)
             (data, responseCode) = self.sendGetRequest(uri: url)
             print(responseCode)
             if responseCode == 410 {
                 return(data, postResponse)
             }
+            attempts += 1
         }
         // My scanners won't reach idle after completing a scan without this
         _ = self.sendGetRequest(uri: url)
@@ -546,13 +548,15 @@ public class esclScanner: NSObject, URLSessionDelegate {
         
         var data = Data()
         var responseCode = 0
-        while responseCode != 200 {
+        var attempts = 0
+        while !(200...299 ~= responseCode) && attempts < 90 {
             sleep(2)
             (data, responseCode) = self.sendGetRequest(uri: url)
             esclScanner.logger.info("ScanDocumentAndSave: Waiting for file, server returned: \(String(responseCode), privacy: .public)")
             if responseCode == 410 {
                 return(nil, postResponse)
             }
+            attempts += 1
         }
         // My scanners won't reach idle after completing a scan without this
         _ = self.sendGetRequest(uri: url)
