@@ -436,10 +436,16 @@ public class esclScanner: NSObject, URLSessionDelegate {
             }
             
             // The scanner returns the url to the document under the "Location" header. One of the devices I tested with returned the location with "http" as the protocol even though request were made using HTTPS
+            var locationField = response.allHeaderFields["Location"] as! String
+            
+            if locationField.first == "/" {
+                locationField = self.baseURI + locationField
+            }
+            
             if self.usePlainText {
-                responseURL = (response.allHeaderFields["Location"] as! String) + "/NextDocument"
+                responseURL = locationField + "/NextDocument"
             } else {
-                responseURL = (response.allHeaderFields["Location"] as! String).replacingOccurrences(of: "http:", with: "https:") + "/NextDocument"
+                responseURL = locationField.replacingOccurrences(of: "http:", with: "https:") + "/NextDocument"
             }
             responseCode = response.statusCode
             esclScanner.logger.info("PostRequest: Request accepted! Location: \(responseURL, privacy: .public)")
