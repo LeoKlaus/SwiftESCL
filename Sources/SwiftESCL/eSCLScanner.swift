@@ -439,6 +439,10 @@ public class esclScanner: NSObject, URLSessionDelegate {
             var locationField = response.allHeaderFields["Location"] as! String
             
             if locationField.first == "/" {
+                if self.baseURI.last == "/" {
+                    locationField.removeFirst()
+                }
+                locationField = locationField.replacingOccurrences(of: "eSCL/", with: "")
                 locationField = self.baseURI + locationField
             }
             
