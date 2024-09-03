@@ -20,11 +20,11 @@ public struct Scanner {
     public var maxWidth: Int = 2550
     public var minHeight: Int = 0
     public var maxHeight: Int = 3510
-    public var brightnessSupport: Support = Support()
-    public var compressionFactorSupport: Support = Support()
-    public var contrastSupport: Support = Support()
-    public var sharpenSupport: Support = Support()
-    public var thresholdSupport: Support = Support()
+    public var brightnessSupport: SteppedRange = SteppedRange()
+    public var compressionFactorSupport: SteppedRange = SteppedRange()
+    public var contrastSupport: SteppedRange = SteppedRange()
+    public var sharpenSupport: SteppedRange = SteppedRange()
+    public var thresholdSupport: SteppedRange = SteppedRange()
 }
 
 /**
@@ -40,7 +40,7 @@ public struct Capabilities {
     public var contentTypes: [String] = []
 }
 
-public struct Support {
+public struct SteppedRange {
     public var min: Int = 0
     public var max: Int = 0
     public var normal: Int = 0
@@ -56,7 +56,7 @@ class CapabilityParser: XMLParser {
     var capabilities = Capabilities()
     
     private var textBuffer: String = ""
-    private var support: Support = Support()
+    private var support: SteppedRange = SteppedRange()
     override init(data: Data) {
         super.init(data: data)
         self.delegate = self
@@ -109,15 +109,15 @@ extension CapabilityParser: XMLParserDelegate {
         case "pwg:ContentType":
             textBuffer = ""
         case "scan:BrightnessSupport":
-            support = Support()
+            support = SteppedRange()
         case "scan:CompressionFactorSupport":
-            support = Support()
+            support = SteppedRange()
         case "scan:ContrastSupport":
-            support = Support()
+            support = SteppedRange()
         case "scan:SharpenSupport":
-            support = Support()
+            support = SteppedRange()
         case "scan:ThresholdSupport":
-            support = Support()
+            support = SteppedRange()
         case "scan:Min":
             textBuffer = ""
         case "scan:Max":
