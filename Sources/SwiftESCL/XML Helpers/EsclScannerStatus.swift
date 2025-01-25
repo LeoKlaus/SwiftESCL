@@ -14,6 +14,10 @@ public struct ScannerStatus: XMLDecodable {
     public var adfState: AdfState?
     public var scanJobs: [String:EsclScanJob]
     
+    /**
+     Initialize from the XML returned by a scanner.
+     - Parameter xmlData: The data returned by the scanner.
+     */
     public init(xmlData: Data) throws {
         let parser = XMLParser(data: xmlData)
         let delegate = ParserDelegate()
@@ -29,6 +33,7 @@ public struct ScannerStatus: XMLDecodable {
         self = scannerStatus
     }
     
+    /// This should only be used for mocking
     public init(version: String? = nil, state: ScannerState? = nil, adfState: AdfState? = nil, scanJobs: [String:EsclScanJob] = [:]) {
         self.version = version
         self.state = state
@@ -36,6 +41,7 @@ public struct ScannerStatus: XMLDecodable {
         self.scanJobs = scanJobs
     }
     
+    /// This should only be used for mocking
     public class ParserDelegate: NSObject, XMLParserDelegate {
         
         static let logger = Logger(

@@ -57,7 +57,7 @@ public struct ScanSettings {
     
     
     
-    /* Currently not supported
+    /* Currently not implemented
     /// Create a pending job on the scanner
     public var storedJobRequest: JobRequest? = nil //JobRequest consists of `JobName` and an optional `PIN`
     */
@@ -95,6 +95,34 @@ public struct ScanSettings {
     /// Adjust the threshold level for black and white scans
     public var threshold: Int? = nil
     
+    /**
+     Initialize to create a scan job
+     - Parameter source: The source of the scan job.
+     - Parameter version: The eSCL version for the job. Should be the highest version supported by the device.
+     - Parameter intent: Intent for the job. This potentially overrides other settings. Which is dependent on the individual scanner.
+     - Parameter mimeType: The mimetype to request from the scanner. `.pdf` and `.jpeg` have to be supported, other values may be ignored.
+     - Parameter resolution: Resolution of the scanned image.
+     - Parameter colorMode: Color mode for the scan job.
+     - Parameter size: Size for the scan job, in 300ths of an Inch.
+     - Parameter offset: Offset from the top-left, in 300ths of an Inch.
+     - Parameter contentType: Content type for the scan job, helps the scanner to set sensible defaults. This potentially overrides other settings.
+     - Parameter colorSpace: Color space for the scan job.
+     - Parameter ccdChannel: CCD channel for the scan job.
+     - Parameter binaryRendering: Binary rendering mode for the scan job.
+     - Parameter duplex: Whether to use duplex for scan job (ADF only)
+     - Parameter numberOfPages: The number of pages to draw from the ADF (has to be supported by the scanner).
+     - Parameter blankPageDetection: Whether to remove blank pages (ADF only, has to be supported by the scanner).
+     - Parameter brightness: Brightness value to use for the scan job.
+     - Parameter compressionFactor: Compression factor to use for the scan job.
+     - Parameter gamma: Gamma to use for the scan job.
+     - Parameter contrast: Contrast to use for the scan job.
+     - Parameter highlight: Cut-off after a which a value is considered a highlight.
+     - Parameter noiseRemoval: Noise removal factor to use for the scan job.
+     - Parameter shadow: Cut-off below which a value is considered a shadow.
+     - Parameter sharpen: Sharpening factor to use for the scan job.
+     - Parameter threshold: Threshold to use for binary rendering.
+     
+     */
     public init(source: InputSource, version: String, intent: Intent? = nil, mimeType: UTType? = nil, resolution: Int? = nil, colorMode: ColorMode? = nil, size: PaperSize? = nil, offset: IntSize? = nil, contentType: ContentType? = nil, colorSpace: ColorSpace? = nil, ccdChannel: CcdChannel? = nil, binaryRendering: BinaryRendering? = nil, duplex: Bool? = nil, numberOfPages: Int? = nil, blankPageDetection: Bool? = nil, blankPageDetectionAndRemoval: Bool? = nil, brightness: Int? = nil, compressionFactor: Int? = nil, gamma: Int? = nil, contrast: Int? = nil, highlight: Int? = nil, noiseRemoval: Int? = nil, shadow: Int? = nil, sharpen: Int? = nil, threshold: Int? = nil) {
         self.source = source
         self.version = version
@@ -145,7 +173,8 @@ public struct ScanSettings {
         }
     }
     
-    public func generateRequestBody() -> Data {
+    /// XML body for these scan settings
+    public var requestBody: Data {
         var bodyStr = """
 <?xml version="1.0" encoding="UTF-8"?>
     <scan:ScanSettings xmlns:pwg="http://www.pwg.org/schemas/2010/12/sm" xmlns:scan="http://schemas.hp.com/imaging/escl/2011/05/03">

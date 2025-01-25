@@ -22,7 +22,7 @@ public struct EsclScannerCapabilities: XMLDecodable {
     public var adminUri: String?
     public var iconUri: String?
     public var certifications: [MopriaCertification] = []
-    // This contains the capabilities of each source.
+    /// This contains the capabilities of each source.
     public var sourceCapabilities: [InputSource: Capabilities] = [:]
     
     public var brightnessSupport: SteppedRange?
@@ -51,6 +51,10 @@ public struct EsclScannerCapabilities: XMLDecodable {
         self.jobSourceInfoSupport = jobSourceInfoSupport
     }
     
+    /**
+     Initialize from the XML returned by a scanner.
+     - Parameter xmlData: The data returned by the scanner.
+     */
     public init(xmlData: Data) throws {
         let parser = XMLParser(data: xmlData)
         let delegate = ParserDelegate()
@@ -65,34 +69,7 @@ public struct EsclScannerCapabilities: XMLDecodable {
         self = scanner
     }
     
-    /*public func getStatus() async throws {
-        let url = self.baseUrl.appendingPathComponent(EsclEndpoint.scannerStatus.uri)
-        
-        let session = URLSession(configuration: .default, delegate: UnsafeURLSessionDelegate(), delegateQueue: nil)
-        
-        let plistDecoder = PropertyListDecoder()
-        try plistDecoder.decode(Int.self, from: Data())
-        
-        var urlRequest = URLRequest(url: url)
-        
-        urlRequest.addValue("application/xml", forHTTPHeaderField: "Accept")
-        
-        let (data, response) = try await session.data(for: urlRequest)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw ScannerRepresentationError.invalidResponse
-        }
-        
-        switch httpResponse.statusCode {
-        case 200...299:
-            print(String(data: data, encoding: .utf8)!)
-        case 404:
-            throw ScannerRepresentationError.notFound
-        default:
-            throw ScannerRepresentationError.unexpectedStatus(httpResponse.statusCode, data)
-        }
-    }*/
-    
+    /// This should only be used for mocking
     public class ParserDelegate: NSObject, XMLParserDelegate {
         
         static let logger = Logger(
