@@ -13,7 +13,7 @@ import OSLog
 /// An object storing the attributes of a single scanner.
 open class EsclScanner: Identifiable {
     
-    static let logger = Logger(
+    public static let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier!,
         category: String(describing: ScannerBrowser.self)
     )
