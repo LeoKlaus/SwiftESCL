@@ -152,7 +152,7 @@ public struct ScanSettings {
       <pwg:Version>\(self.version)</pwg:Version>
 """
         
-        bodyStr += "\n<pwg:InputSource>\(source.toBodyString())</pwg:InputSource>"
+        bodyStr += "\n<pwg:InputSource>\(source.bodyString)</pwg:InputSource>"
         
         if let intent {
             bodyStr += "\n<scan:Intent>\(intent.rawValue)</scan:Intent>"

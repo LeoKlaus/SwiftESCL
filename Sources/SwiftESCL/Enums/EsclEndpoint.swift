@@ -15,6 +15,7 @@ public enum EsclEndpoint {
     case scanImageInfo(String)
     case unknown(String)
     
+    /// The path for the endpoint (including a `/` at the beginning).
     var uri: String {
         switch self {
         case .scannerCapabilities:
