@@ -364,6 +364,12 @@ open class EsclScanner: Identifiable {
         var retries: Int = 0
         
         while waitingForScanner {
+            
+            if Task.isCancelled {
+                try await self.cancelJob(jobId)
+                throw ScanJobError.cancelled
+            }
+            
             do {
                 scanResults.append(try await self.getNextDocument(for: jobId, updateProgress))
                 retries = 0

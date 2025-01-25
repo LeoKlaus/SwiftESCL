@@ -14,4 +14,6 @@ public enum ScanJobError: Error {
     case conflictingArguments
     /// The scanner is unavailable
     case deviceUnavailable
+    /// ScanJob has been cancelled
+    case cancelled
 }
