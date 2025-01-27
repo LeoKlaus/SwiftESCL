@@ -96,7 +96,7 @@ public struct ScannerStatus: XMLDecodable {
                 }
                 self.scannerStatus?.adfState = adfState
             case "joburi":
-                let regex = #/.*\/ScanJobs\/(.*)/#
+                let regex = #/.*\/ScanJobs\/([0-9a-f\-]*)/#
                 
                 if let jobID = currentValue.firstMatch(of: regex)?.1 {
                     self.currentJobUri = String(jobID)
