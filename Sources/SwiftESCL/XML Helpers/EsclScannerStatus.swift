@@ -53,6 +53,7 @@ public struct ScannerStatus: XMLDecodable {
         var scannerStatus: ScannerStatus? = nil
         var parsingError: Error? = nil
         
+        var currentJobUri: String? = nil
         var currentJobUuid: String? = nil
         var currentJobAge: Int? = nil
         var currentJobImagesCompleted: Int?
@@ -94,6 +95,14 @@ public struct ScannerStatus: XMLDecodable {
                     return
                 }
                 self.scannerStatus?.adfState = adfState
+            case "joburi":
+                let regex = #/.*\/ScanJobs\/(.*)/#
+                
+                if let jobID = currentValue.firstMatch(of: regex)?.1 {
+                    self.currentJobUri = String(jobID)
+                } else {
+                    self.currentJobUri = currentValue
+                }
             case "jobuuid":
                 self.currentJobUuid = currentValue
             case "age":
@@ -118,12 +127,13 @@ public struct ScannerStatus: XMLDecodable {
                 }
                 self.currentJobState = jobState
             case "jobinfo":
-                guard let currentJobUuid, let currentJobState else {
+                guard let currentJobUri, let currentJobState, let currentJobUuid else {
                     self.parsingError = XMLDecodingError.unexptedType(EsclScanJob.self, currentValue)
                     parser.abortParsing()
                     return
                 }
-                self.scannerStatus?.scanJobs[currentJobUuid] = EsclScanJob(
+                
+                self.scannerStatus?.scanJobs[currentJobUri] = EsclScanJob(
                     jobUuid: currentJobUuid,
                     age: currentJobAge,
                     imagesCompleted: currentJobImagesCompleted,

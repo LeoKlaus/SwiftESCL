@@ -390,11 +390,15 @@ open class EsclScanner: Identifiable {
         let status = try await self.getStatus()
         
         guard let jobStatus = status.scanJobs[jobId] else {
-            throw ScannerRepresentationError.scanJobNotFound
+            //throw ScannerRepresentationError.scanJobNotFound
+            Self.logger.error("Couldn't find job with URI \(jobId) in scanner status. Full status:\n\(String(describing: status))")
+            return scanResults
         }
         
         guard jobStatus.jobState == .completed else {
-            throw ScannerRepresentationError.unexpectedScanJobState(jobStatus.jobState)
+            //throw ScannerRepresentationError.unexpectedScanJobState(jobStatus.jobState)
+            Self.logger.error("Scanner doesn't report job as completed. Full status:\n\(String(describing: status))")
+            return scanResults
         }
         
         return scanResults
