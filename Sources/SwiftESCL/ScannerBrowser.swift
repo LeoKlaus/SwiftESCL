@@ -20,8 +20,8 @@ open class ScannerBrowser: ObservableObject {
     
     @Published public var discovered: [EsclScanner] = []
     
-    let browser: NWBrowser
-    let usePlainText: Bool
+    var browser: NWBrowser
+    var usePlainText: Bool
     
     
     /**
@@ -37,6 +37,25 @@ open class ScannerBrowser: ObservableObject {
      - Parameter usePlainText Whether to query for scanners using the `uscan` or `uscans` service type. All scanners must discoverable via `uscan`, but most require the use of HTTPS for all operations. Plain text should only be used when no scanner can be found using `uscans`.
      */
     public init(usePlainText: Bool = false) {
+        
+        let parameters = NWParameters()
+        parameters.includePeerToPeer = true
+        
+        if usePlainText {
+            browser = NWBrowser(for: .bonjourWithTXTRecord(type: "_uscan._tcp", domain: nil), using: parameters)
+        } else {
+            browser = NWBrowser(for: .bonjourWithTXTRecord(type: "_uscans._tcp", domain: nil), using: parameters)
+        }
+        
+        self.usePlainText = usePlainText
+    }
+    
+    /**
+     Switch encryption for the current browser. This stops discovery and does not start it again.
+     - Parameter usePlainText Whether to query for scanners using the `uscan` or `uscans` service type. All scanners must discoverable via `uscan`, but most require the use of HTTPS for all operations. Plain text should only be used when no scanner can be found using `uscans`.
+     */
+    public func switchEncryption(usePlainText: Bool) {
+        self.stopDiscovery()
         
         let parameters = NWParameters()
         parameters.includePeerToPeer = true
