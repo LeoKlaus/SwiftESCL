@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
 import OSLog
 
 /// An object storing the attributes of a single scanner.
-open class EsclScanner: Identifiable {
+public actor EsclScanner: Identifiable {
     
     public static let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier!,
@@ -188,7 +188,7 @@ open class EsclScanner: Identifiable {
      - Parameter endpoint: The endpoint to send the request to
      - Parameter body: The body to send with the request, default is `nil`
      */
-    open func sendRequestAndIgnoreResponse(method: String = "GET", endPoint: EsclEndpoint, body: Data? = nil) async throws {
+    func sendRequestAndIgnoreResponse(method: String = "GET", endPoint: EsclEndpoint, body: Data? = nil) async throws {
         _ = try await self.sendRequest(method: method, endPoint: endPoint, body: body)
     }
     
@@ -196,7 +196,7 @@ open class EsclScanner: Identifiable {
      Start a scan job.
      - Parameter scanSettings: Settings for the scan job
      */
-    open func sendJobRequest(scanSettings: ScanSettings) async throws -> String {
+    func sendJobRequest(scanSettings: ScanSettings) async throws -> String {
         let url = self.baseUrl.appendingPathComponent(EsclEndpoint.scanJobs.uri)
         
         let session = URLSession(configuration: .default, delegate: UnsafeURLSessionDelegate(), delegateQueue: nil)
@@ -245,7 +245,7 @@ open class EsclScanner: Identifiable {
      - Parameter body: The body to send with the request, default is `nil`
      - Parameter updateProgress: A function that should be called by the URLSessionDelegate for progress updates
      */
-    open func sendRequest(method: String = "GET", endPoint: EsclEndpoint, body: Data? = nil, _ updateProgress: @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> Data {
+    func sendRequest(method: String = "GET", endPoint: EsclEndpoint, body: Data? = nil, _ updateProgress: @Sendable @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> Data {
         let url = self.baseUrl.appendingPathComponent(endPoint.uri)
         
         let session = URLSession(configuration: .default, delegate: UnsafeURLSessionDelegate(), delegateQueue: nil)
@@ -287,13 +287,13 @@ open class EsclScanner: Identifiable {
      - Parameter endpoint: The endpoint to send the request to
      - Parameter body: The body to send with the request, default is `nil`
      */
-    open func sendRequest<T: XMLDecodable>(method: String = "GET", endPoint: EsclEndpoint, body: Data? = nil) async throws -> T {
+    func sendRequest<T: XMLDecodable>(method: String = "GET", endPoint: EsclEndpoint, body: Data? = nil) async throws -> T {
         let data: Data = try await self.sendRequest(method: method, endPoint: endPoint, body: body)
         return try T(xmlData: data)
     }
     
     /// Convenience method to get the scanner capabilities
-    open func getCapabilities() async throws -> EsclScannerCapabilities {
+    func getCapabilities() async throws -> EsclScannerCapabilities {
         
         if let capabilities {
             return capabilities
@@ -305,7 +305,7 @@ open class EsclScanner: Identifiable {
     }
     
     /// Cenvenience method to get the scanner status
-    open func getStatus() async throws -> ScannerStatus {
+    func getStatus() async throws -> ScannerStatus {
         return try await self.sendRequest(endPoint: .scannerStatus)
     }
     
@@ -314,7 +314,7 @@ open class EsclScanner: Identifiable {
      - Parameter scanSettings: Settings for the scan job
      - Returns A string containing the job ID (exluding the `/ScanJobs/` path)
      */
-    open func startJob(_ scanSettings: ScanSettings) async throws -> String {
+    func startJob(_ scanSettings: ScanSettings) async throws -> String {
         let status = try await getStatus()
         guard status.state == .idle else {
             throw ScanJobError.scannerNotReady(status.state)
@@ -322,7 +322,7 @@ open class EsclScanner: Identifiable {
         
         let jobUri = try await self.sendJobRequest(scanSettings: scanSettings)
         
-        let regex = #/.*\/ScanJobs\/(.*)/#
+        let regex = #/.*\/ScanJobs\/([0-9a-f\-]*)/#
         
         if let jobID = jobUri.firstMatch(of: regex)?.1 {
             return String(jobID)
@@ -335,7 +335,7 @@ open class EsclScanner: Identifiable {
      Convenience method to cancel a running scan job
      - Parameter jobId: The ID of the scan job
      */
-    open func cancelJob(_ jobId: String) async throws {
+    func cancelJob(_ jobId: String) async throws {
         try await self.sendRequestAndIgnoreResponse(endPoint: .scanJob(jobId))
     }
     
@@ -344,7 +344,7 @@ open class EsclScanner: Identifiable {
      - Parameter jobId: The ID of the scan job
      - Parameter updateProgress:A function that should be called by the URLSessionDelegate for progress updates
      */
-    open func getNextDocument(for jobId: String, _ updateProgress: @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> Data {
+    func getNextDocument(for jobId: String, _ updateProgress: @Sendable @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> Data {
         return try await self.sendRequest(endPoint: .scanNextDocument(jobId), updateProgress)
     }
     
@@ -353,7 +353,7 @@ open class EsclScanner: Identifiable {
      - Parameter jobId: The ID of the scan job
      - Parameter updateProgress:A function that should be called by the URLSessionDelegate for progress updates
      */
-    open func performScan(_ scanSettings: ScanSettings, _ updateProgress: @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> [Data] {
+    func performScan(_ scanSettings: ScanSettings, _ updateProgress: @Sendable @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> [Data] {
         
         let jobId = try await self.startJob(scanSettings)
         

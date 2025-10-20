@@ -5,7 +5,7 @@
 //  Created by Leo Wehrfritz on 20.01.25.
 //
 
-public enum ColorSpace: RawRepresentable, Equatable {
+public enum ColorSpace: RawRepresentable, Equatable, Sendable {
     case sRGB
     case unknown(String)
     

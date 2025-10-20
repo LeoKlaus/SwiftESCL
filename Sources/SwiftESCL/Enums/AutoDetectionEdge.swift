@@ -5,7 +5,7 @@
 //  Created by Leo Wehrfritz on 22.01.25.
 //
 
-public enum AutoDetectionEdge: String {
+public enum AutoDetectionEdge: String, Sendable {
     case top = "TopEdge"
     case left = "LeftEdge"
     case bottom = "BottomEdge"

@@ -5,7 +5,7 @@
 //  Created by Leo Wehrfritz on 20.01.25.
 //
 
-public enum Intent: RawRepresentable, Equatable {
+public enum Intent: RawRepresentable, Equatable, Sendable {
     
     /// Scanning optimized for text
     case document

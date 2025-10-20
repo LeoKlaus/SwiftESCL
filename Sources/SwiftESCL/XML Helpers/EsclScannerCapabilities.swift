@@ -12,7 +12,7 @@ import UniformTypeIdentifiers
 /**
  An object representing the ScannerCapabilities of a scanner.
  */
-public struct EsclScannerCapabilities: XMLDecodable {
+public struct EsclScannerCapabilities: XMLDecodable, Sendable {
     
     public var version: String?
     public var makeAndModel: String?

@@ -5,19 +5,19 @@
 //  Created by Leo Wehrfritz on 20.01.25.
 //
 
-public enum ImagePositionHorizontal: String {
+public enum ImagePositionHorizontal: String, Sendable {
     case left = "Left"
     case center = "Center"
     case right = "Right"
 }
 
-public enum ImagePositionVertical: String {
+public enum ImagePositionVertical: String, Sendable {
     case top = "Top"
     case center = "Center"
     case bottom = "Bottom"
 }
 
-public struct Justification {
+public struct Justification: Sendable {
     public var xImagePosition: ImagePositionHorizontal = .left
     public var yImagePosition: ImagePositionVertical = .top
     

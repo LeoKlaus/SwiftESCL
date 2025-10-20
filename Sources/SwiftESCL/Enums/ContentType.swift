@@ -5,7 +5,7 @@
 //  Created by Leo Wehrfritz on 20.01.25.
 //
 
-public enum ContentType: String {
+public enum ContentType: String, Sendable {
     case photo = "Photo"
     case text = "Text"
     case textAndPhoto = "TextAndPhoto"

@@ -5,7 +5,7 @@
 //  Created by Leo Wehrfritz on 24.01.25.
 //
 
-public enum ScanJobState: String {
+public enum ScanJobState: String, Sendable {
     /// Cancelled through user interaction
     case canceled = "Canceled"
     /// Cancelled through internal device or communication error

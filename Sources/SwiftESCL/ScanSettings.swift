@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
 /**
  All parameters except version are optional. The scanner will use its default values for all settings that are not provided.
  */
-public struct ScanSettings {
+public struct ScanSettings: Sendable {
     
     /// Source for the scan
     public var source: InputSource
@@ -156,8 +156,8 @@ public struct ScanSettings {
      Calculate the offset for the current scansettings. This is only needed if the scanners ADF uses a justification that is not top-left.
      - Parameter for: The scanner to calculate the offset for.
      */
-    mutating public func calculateOffSet(for scanner: EsclScanner) {
-        if let sourceCaps = scanner.capabilities?.sourceCapabilities[self.source] {
+    mutating public func calculateOffSet(for scanner: EsclScanner) async {
+        if let sourceCaps = await scanner.capabilities?.sourceCapabilities[self.source] {
             
             if self.offset?.width == nil && sourceCaps.justification?.xImagePosition == .right, let maxWidth = sourceCaps.maxWidth, let scanSize = self.size?.rawValue {
                 

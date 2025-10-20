@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
 /**
  An object representing the capabilites of a single source on a scanner.
  */
-public struct Capabilities {
+public struct Capabilities: Sendable {
     public var colorModes: [ColorMode]
     public var documentFormats: Set<UTType>
     public var supportedResolutions: [Int]

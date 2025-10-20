@@ -5,7 +5,7 @@
 //  Created by Leo Wehrfritz on 23.01.25.
 //
 
-public enum ScanJobError: Error {
+public enum ScanJobError: Error, Sendable {
     /// The scanner is not ready to take a job, includes the current state of the scanner.
     case scannerNotReady(ScannerState?)
     /// The scanner did accept the job, but didn't return its ID (this might be a parsing errro).

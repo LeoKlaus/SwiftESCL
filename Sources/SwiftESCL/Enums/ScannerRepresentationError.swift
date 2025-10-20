@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum ScannerRepresentationError: Error {
+public enum ScannerRepresentationError: Error, Sendable {
     /// The TXT record of the scanner didn't include an admin URI
     case noAdminUrl
     /// The admin URI in the scanners TXT record is not a valid URL

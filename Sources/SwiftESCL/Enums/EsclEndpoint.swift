@@ -5,7 +5,7 @@
 //  Created by Leo Wehrfritz on 20.01.25.
 //
 
-public enum EsclEndpoint {
+public enum EsclEndpoint: Sendable {
     case scannerCapabilities
     case scannerStatus
     case scanBufferInfo

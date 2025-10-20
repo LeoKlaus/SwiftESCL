@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol XMLDecodable {
+public protocol XMLDecodable: Sendable {
     
     init(xmlData: Data) throws
     

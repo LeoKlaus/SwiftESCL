@@ -23,6 +23,7 @@ open class ScannerBrowser: ObservableObject {
     let browser: NWBrowser
     let usePlainText: Bool
     
+    var isClosed: Bool = false
     
     /**
      Initalize a ScannerBrowser to search for scanners via Bonjour in the local network.
@@ -51,7 +52,11 @@ open class ScannerBrowser: ObservableObject {
     }
     
     /// Starts bonjour discovery
-    open func startDiscovery() {
+    func startDiscovery() throws {
+        
+        guard !self.isClosed else {
+            throw ScannerBrowserError.browserIsClosed
+        }
         
         if browser.state == .ready {
             return
@@ -94,6 +99,7 @@ open class ScannerBrowser: ObservableObject {
     /// Stops bonjour discovery (Warning: you have to recreate ScannerBrowser before being able to start discovery again!)
     public func stopDiscovery() {
         browser.cancel()
+        self.isClosed = true
     }
     
     private func addScanner(_ device: NWBrowser.Result) {

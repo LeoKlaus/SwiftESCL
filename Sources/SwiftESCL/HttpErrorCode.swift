@@ -5,7 +5,7 @@
 //  Created by Leo Wehrfritz on 20.01.25.
 //
 
-enum EsclHttpErrorCode: Int {
+enum EsclHttpErrorCode: Int, Sendable {
     /// The request was understood, and the scanner started the transaction
     case ok = 200
     /// A scan job is created

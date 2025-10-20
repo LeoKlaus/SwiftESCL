@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct EsclScanJob {
+public struct EsclScanJob: Sendable {
     var jobUuid: String
     var age: Int?
     var imagesCompleted: Int?

@@ -8,7 +8,7 @@
 import Foundation
 import OSLog
 
-public struct EsclScanImageInfo: XMLDecodable {
+public struct EsclScanImageInfo: XMLDecodable, Sendable {
     
     /// UUID of the scanjob
     var jobUUID: String?

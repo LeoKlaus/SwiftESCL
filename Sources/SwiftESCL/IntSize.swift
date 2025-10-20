@@ -5,7 +5,7 @@
 //  Created by Leo Wehrfritz on 24.01.25.
 //
 
-public struct IntSize: Equatable {
+public struct IntSize: Equatable, Sendable {
     public var width: Int
     public var height: Int
     

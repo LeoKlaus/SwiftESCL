@@ -5,7 +5,7 @@
 //  Created by Leo Wehrfritz on 23.01.25.
 //
 
-public enum AdfState: String {
+public enum AdfState: String, Sendable {
     case processing = "ScannerAdfProcessing"
     case empty = "ScannerAdfEmpty"
     case jam = "ScannerAdfJam"

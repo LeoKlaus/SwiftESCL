@@ -5,7 +5,7 @@
 //  Created by Leo Wehrfritz on 20.01.25.
 //
 
-public enum CcdChannel: String {
+public enum CcdChannel: String, Sendable {
     case red = "Red"
     case green = "Green"
     case blue = "Blue"

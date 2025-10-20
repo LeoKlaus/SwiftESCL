@@ -8,7 +8,7 @@
 import Foundation
 import OSLog
 
-public struct ScannerStatus: XMLDecodable {
+public struct ScannerStatus: XMLDecodable, Sendable {
     public var version: String?
     public var state: ScannerState?
     public var adfState: AdfState?
@@ -143,7 +143,7 @@ public struct ScannerStatus: XMLDecodable {
                 self.currentJobAge = nil
                 self.currentJobImagesCompleted = nil
                 self.currentJobState = nil
-            case "scannerstatus", "joburi", "jobs":
+            case "scannerstatus", "jobs":
                 break
             default:
                 Self.logger.info("Unexpected key \(elementName, privacy: .public)")

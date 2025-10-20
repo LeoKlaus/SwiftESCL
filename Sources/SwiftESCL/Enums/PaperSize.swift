@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-public enum PaperSize: RawRepresentable, Hashable {
+public enum PaperSize: RawRepresentable, Hashable, Sendable {
     case a4
     case a5
     case a6

@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct SteppedRange: Equatable {
+public struct SteppedRange: Equatable, Sendable {
     public var min: Int = 0
     public var max: Int = 0
     public var normal: Int = 0

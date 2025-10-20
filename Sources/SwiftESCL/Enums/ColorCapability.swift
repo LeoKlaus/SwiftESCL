@@ -5,6 +5,6 @@
 //  Created by Leo Wehrfritz on 20.01.25.
 //
 
-public enum ColorCapability: String {
+public enum ColorCapability: String, Sendable {
     case color, grayscale, binary
 }

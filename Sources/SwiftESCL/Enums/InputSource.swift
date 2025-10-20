@@ -5,7 +5,7 @@
 //  Created by Leo Wehrfritz on 20.01.25.
 //
 
-public enum InputSource: String {
+public enum InputSource: String, Sendable {
     case platen, adf, camera, adfDuplex
     
     /// The value a scanner expects for the source parameter

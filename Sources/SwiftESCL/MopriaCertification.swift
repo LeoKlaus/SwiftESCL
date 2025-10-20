@@ -5,7 +5,7 @@
 //  Created by Leo Wehrfritz on 20.01.25.
 //
 
-public struct MopriaCertification {
+public struct MopriaCertification: Sendable {
     public var name: String = ""
     public var version: String = ""
     
