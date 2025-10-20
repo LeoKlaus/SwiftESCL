@@ -196,7 +196,7 @@ public actor EsclScanner: Identifiable {
      Start a scan job.
      - Parameter scanSettings: Settings for the scan job
      */
-    func sendJobRequest(scanSettings: ScanSettings) async throws -> String {
+    public func sendJobRequest(scanSettings: ScanSettings) async throws -> String {
         let url = self.baseUrl.appendingPathComponent(EsclEndpoint.scanJobs.uri)
         
         let session = URLSession(configuration: .default, delegate: UnsafeURLSessionDelegate(), delegateQueue: nil)
@@ -245,7 +245,7 @@ public actor EsclScanner: Identifiable {
      - Parameter body: The body to send with the request, default is `nil`
      - Parameter updateProgress: A function that should be called by the URLSessionDelegate for progress updates
      */
-    func sendRequest(method: String = "GET", endPoint: EsclEndpoint, body: Data? = nil, _ updateProgress: @Sendable @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> Data {
+    public func sendRequest(method: String = "GET", endPoint: EsclEndpoint, body: Data? = nil, _ updateProgress: @Sendable @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> Data {
         let url = self.baseUrl.appendingPathComponent(endPoint.uri)
         
         let session = URLSession(configuration: .default, delegate: UnsafeURLSessionDelegate(), delegateQueue: nil)
@@ -287,13 +287,13 @@ public actor EsclScanner: Identifiable {
      - Parameter endpoint: The endpoint to send the request to
      - Parameter body: The body to send with the request, default is `nil`
      */
-    func sendRequest<T: XMLDecodable>(method: String = "GET", endPoint: EsclEndpoint, body: Data? = nil) async throws -> T {
+    public func sendRequest<T: XMLDecodable>(method: String = "GET", endPoint: EsclEndpoint, body: Data? = nil) async throws -> T {
         let data: Data = try await self.sendRequest(method: method, endPoint: endPoint, body: body)
         return try T(xmlData: data)
     }
     
     /// Convenience method to get the scanner capabilities
-    func getCapabilities() async throws -> EsclScannerCapabilities {
+    public func getCapabilities() async throws -> EsclScannerCapabilities {
         
         if let capabilities {
             return capabilities
@@ -305,7 +305,7 @@ public actor EsclScanner: Identifiable {
     }
     
     /// Cenvenience method to get the scanner status
-    func getStatus() async throws -> ScannerStatus {
+    public func getStatus() async throws -> ScannerStatus {
         return try await self.sendRequest(endPoint: .scannerStatus)
     }
     
@@ -314,7 +314,7 @@ public actor EsclScanner: Identifiable {
      - Parameter scanSettings: Settings for the scan job
      - Returns A string containing the job ID (exluding the `/ScanJobs/` path)
      */
-    func startJob(_ scanSettings: ScanSettings) async throws -> String {
+    public func startJob(_ scanSettings: ScanSettings) async throws -> String {
         let status = try await getStatus()
         guard status.state == .idle else {
             throw ScanJobError.scannerNotReady(status.state)
@@ -335,7 +335,7 @@ public actor EsclScanner: Identifiable {
      Convenience method to cancel a running scan job
      - Parameter jobId: The ID of the scan job
      */
-    func cancelJob(_ jobId: String) async throws {
+    public func cancelJob(_ jobId: String) async throws {
         try await self.sendRequestAndIgnoreResponse(endPoint: .scanJob(jobId))
     }
     
@@ -344,7 +344,7 @@ public actor EsclScanner: Identifiable {
      - Parameter jobId: The ID of the scan job
      - Parameter updateProgress:A function that should be called by the URLSessionDelegate for progress updates
      */
-    func getNextDocument(for jobId: String, _ updateProgress: @Sendable @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> Data {
+    public func getNextDocument(for jobId: String, _ updateProgress: @Sendable @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> Data {
         return try await self.sendRequest(endPoint: .scanNextDocument(jobId), updateProgress)
     }
     
@@ -353,7 +353,7 @@ public actor EsclScanner: Identifiable {
      - Parameter jobId: The ID of the scan job
      - Parameter updateProgress:A function that should be called by the URLSessionDelegate for progress updates
      */
-    func performScan(_ scanSettings: ScanSettings, _ updateProgress: @Sendable @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> [Data] {
+    public func performScan(_ scanSettings: ScanSettings, _ updateProgress: @Sendable @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> [Data] {
         
         let jobId = try await self.startJob(scanSettings)
         

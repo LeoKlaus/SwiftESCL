@@ -52,7 +52,7 @@ open class ScannerBrowser: ObservableObject {
     }
     
     /// Starts bonjour discovery
-    func startDiscovery() throws {
+    public func startDiscovery() throws {
         
         guard !self.isClosed else {
             throw ScannerBrowserError.browserIsClosed
