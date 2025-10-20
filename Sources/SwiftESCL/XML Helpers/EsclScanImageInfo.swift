@@ -19,6 +19,10 @@ public struct EsclScanImageInfo: XMLDecodable {
     /// Bytes per line of the scanjob
     var actualBytesPerLine: Int?
     
+    /**
+     Initialize from the XML returned by a scanner.
+     - Parameter xmlData: The data returned by the scanner.
+     */
     public init(xmlData: Data) throws {
         let parser = XMLParser(data: xmlData)
         let delegate = ParserDelegate()
@@ -34,6 +38,7 @@ public struct EsclScanImageInfo: XMLDecodable {
         self = scanImageInfo
     }
     
+    /// This should only be used for mocking
     public init(jobUUID: String? = nil, actualWidth: Int? = nil, actualHeight: Int? = nil, actualBytesPerLine: Int? = nil) {
         self.jobUUID = jobUUID
         self.actualWidth = actualWidth
@@ -41,6 +46,7 @@ public struct EsclScanImageInfo: XMLDecodable {
         self.actualBytesPerLine = actualBytesPerLine
     }
     
+    /// This should only be used for mocking
     public class ParserDelegate: NSObject, XMLParserDelegate {
         
         static let logger = Logger(

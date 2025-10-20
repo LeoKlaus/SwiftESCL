@@ -13,8 +13,9 @@ public enum EsclEndpoint {
     case scanJob(String)
     case scanNextDocument(String)
     case scanImageInfo(String)
-    case scanData(String)
+    case unknown(String)
     
+    /// The path for the endpoint (including a `/` at the beginning).
     var uri: String {
         switch self {
         case .scannerCapabilities:
@@ -31,7 +32,7 @@ public enum EsclEndpoint {
             "/ScanJobs/\(jobId)/ScanImageInfo"
         case .scanNextDocument(let jobId):
             "/ScanJobs/\(jobId)/NextDocument"
-        case .scanData(let url):
+        case .unknown(let url):
             url
         }
     }

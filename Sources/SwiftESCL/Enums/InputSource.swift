@@ -8,7 +8,8 @@
 public enum InputSource: String {
     case platen, adf, camera, adfDuplex
     
-    func toBodyString() -> String {
+    /// The value a scanner expects for the source parameter
+    var bodyString: String {
         switch self {
         case .platen:
             "Platen"

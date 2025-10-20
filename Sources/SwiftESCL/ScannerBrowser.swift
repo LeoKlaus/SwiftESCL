@@ -91,7 +91,7 @@ open class ScannerBrowser: ObservableObject {
         browser.start(queue: .main)
     }
     
-    /// Stops bonjour discovery
+    /// Stops bonjour discovery (Warning: you have to recreate ScannerBrowser before being able to start discovery again!)
     public func stopDiscovery() {
         browser.cancel()
     }

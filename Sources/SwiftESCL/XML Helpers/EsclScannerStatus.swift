@@ -14,6 +14,10 @@ public struct ScannerStatus: XMLDecodable {
     public var adfState: AdfState?
     public var scanJobs: [String:EsclScanJob]
     
+    /**
+     Initialize from the XML returned by a scanner.
+     - Parameter xmlData: The data returned by the scanner.
+     */
     public init(xmlData: Data) throws {
         let parser = XMLParser(data: xmlData)
         let delegate = ParserDelegate()
@@ -29,6 +33,7 @@ public struct ScannerStatus: XMLDecodable {
         self = scannerStatus
     }
     
+    /// This should only be used for mocking
     public init(version: String? = nil, state: ScannerState? = nil, adfState: AdfState? = nil, scanJobs: [String:EsclScanJob] = [:]) {
         self.version = version
         self.state = state
@@ -36,6 +41,7 @@ public struct ScannerStatus: XMLDecodable {
         self.scanJobs = scanJobs
     }
     
+    /// This should only be used for mocking
     public class ParserDelegate: NSObject, XMLParserDelegate {
         
         static let logger = Logger(
@@ -47,6 +53,7 @@ public struct ScannerStatus: XMLDecodable {
         var scannerStatus: ScannerStatus? = nil
         var parsingError: Error? = nil
         
+        var currentJobUri: String? = nil
         var currentJobUuid: String? = nil
         var currentJobAge: Int? = nil
         var currentJobImagesCompleted: Int?
@@ -88,6 +95,14 @@ public struct ScannerStatus: XMLDecodable {
                     return
                 }
                 self.scannerStatus?.adfState = adfState
+            case "joburi":
+                let regex = #/.*\/ScanJobs\/([0-9a-f\-]*)/#
+                
+                if let jobID = currentValue.firstMatch(of: regex)?.1 {
+                    self.currentJobUri = String(jobID)
+                } else {
+                    self.currentJobUri = currentValue
+                }
             case "jobuuid":
                 self.currentJobUuid = currentValue
             case "age":
@@ -112,12 +127,13 @@ public struct ScannerStatus: XMLDecodable {
                 }
                 self.currentJobState = jobState
             case "jobinfo":
-                guard let currentJobUuid, let currentJobState else {
+                guard let currentJobUri, let currentJobState, let currentJobUuid else {
                     self.parsingError = XMLDecodingError.unexptedType(EsclScanJob.self, currentValue)
                     parser.abortParsing()
                     return
                 }
-                self.scannerStatus?.scanJobs[currentJobUuid] = EsclScanJob(
+                
+                self.scannerStatus?.scanJobs[currentJobUri] = EsclScanJob(
                     jobUuid: currentJobUuid,
                     age: currentJobAge,
                     imagesCompleted: currentJobImagesCompleted,

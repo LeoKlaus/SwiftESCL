@@ -14,7 +14,8 @@ public enum PaperSize: RawRepresentable, Hashable {
     case a6
     case letter
     case legal
-    case custom(Int, Int)
+    
+    case custom(width: Int, height: Int)
     
     public typealias RawValue = IntSize
     
@@ -31,7 +32,7 @@ public enum PaperSize: RawRepresentable, Hashable {
         case IntSize(width: 2551, height: 4205):
             self = .legal
         default:
-            self = .custom(Int(rawValue.width), Int(rawValue.height))
+            self = .custom(width: Int(rawValue.width), height: Int(rawValue.height))
         }
     }
     

@@ -182,10 +182,20 @@ open class EsclScanner: Identifiable {
         }
     }
     
+    /**
+     Send a request to the scanner without returning the response
+     - Parameter method: String representing the HTTP-method, default is `"GET"`
+     - Parameter endpoint: The endpoint to send the request to
+     - Parameter body: The body to send with the request, default is `nil`
+     */
     open func sendRequestAndIgnoreResponse(method: String = "GET", endPoint: EsclEndpoint, body: Data? = nil) async throws {
         _ = try await self.sendRequest(method: method, endPoint: endPoint, body: body)
     }
     
+    /**
+     Start a scan job.
+     - Parameter scanSettings: Settings for the scan job
+     */
     open func sendJobRequest(scanSettings: ScanSettings) async throws -> String {
         let url = self.baseUrl.appendingPathComponent(EsclEndpoint.scanJobs.uri)
         
@@ -195,7 +205,7 @@ open class EsclScanner: Identifiable {
         
         urlRequest.httpMethod = "POST"
         
-        urlRequest.httpBody = scanSettings.generateRequestBody()
+        urlRequest.httpBody = scanSettings.requestBody
         
         urlRequest.addValue("application/xml", forHTTPHeaderField: "Accept")
         
@@ -228,6 +238,13 @@ open class EsclScanner: Identifiable {
         }
     }
     
+    /**
+     Send a request to the scanner and return the response data
+     - Parameter method: String representing the HTTP-method, default is `"GET"`
+     - Parameter endpoint: The endpoint to send the request to
+     - Parameter body: The body to send with the request, default is `nil`
+     - Parameter updateProgress: A function that should be called by the URLSessionDelegate for progress updates
+     */
     open func sendRequest(method: String = "GET", endPoint: EsclEndpoint, body: Data? = nil, _ updateProgress: @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> Data {
         let url = self.baseUrl.appendingPathComponent(endPoint.uri)
         
@@ -264,11 +281,18 @@ open class EsclScanner: Identifiable {
         }
     }
     
+    /**
+     Send a request to the scanner and decode the response.
+     - Parameter method: String representing the HTTP-method, default is `"GET"`
+     - Parameter endpoint: The endpoint to send the request to
+     - Parameter body: The body to send with the request, default is `nil`
+     */
     open func sendRequest<T: XMLDecodable>(method: String = "GET", endPoint: EsclEndpoint, body: Data? = nil) async throws -> T {
         let data: Data = try await self.sendRequest(method: method, endPoint: endPoint, body: body)
         return try T(xmlData: data)
     }
     
+    /// Convenience method to get the scanner capabilities
     open func getCapabilities() async throws -> EsclScannerCapabilities {
         
         if let capabilities {
@@ -280,10 +304,16 @@ open class EsclScanner: Identifiable {
         return caps
     }
     
+    /// Cenvenience method to get the scanner status
     open func getStatus() async throws -> ScannerStatus {
         return try await self.sendRequest(endPoint: .scannerStatus)
     }
     
+    /**
+     Convenience method to start a scan job.
+     - Parameter scanSettings: Settings for the scan job
+     - Returns A string containing the job ID (exluding the `/ScanJobs/` path)
+     */
     open func startJob(_ scanSettings: ScanSettings) async throws -> String {
         let status = try await getStatus()
         guard status.state == .idle else {
@@ -301,14 +331,28 @@ open class EsclScanner: Identifiable {
         return jobUri
     }
     
-    open func cancelJob(_ jobUri: String) async throws {
-        try await self.sendRequestAndIgnoreResponse(endPoint: .scanJob(jobUri))
+    /**
+     Convenience method to cancel a running scan job
+     - Parameter jobId: The ID of the scan job
+     */
+    open func cancelJob(_ jobId: String) async throws {
+        try await self.sendRequestAndIgnoreResponse(endPoint: .scanJob(jobId))
     }
     
-    open func getNextDocument(for jobUri: String, _ updateProgress: @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> Data {
-        return try await self.sendRequest(endPoint: .scanNextDocument(jobUri), updateProgress)
+    /**
+     Convenience method to get the next document of a scan job
+     - Parameter jobId: The ID of the scan job
+     - Parameter updateProgress:A function that should be called by the URLSessionDelegate for progress updates
+     */
+    open func getNextDocument(for jobId: String, _ updateProgress: @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> Data {
+        return try await self.sendRequest(endPoint: .scanNextDocument(jobId), updateProgress)
     }
     
+    /**
+     Convenience method to perform a scan job start to finish (This potentially runs for minutes!)
+     - Parameter jobId: The ID of the scan job
+     - Parameter updateProgress:A function that should be called by the URLSessionDelegate for progress updates
+     */
     open func performScan(_ scanSettings: ScanSettings, _ updateProgress: @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> [Data] {
         
         let jobId = try await self.startJob(scanSettings)
@@ -320,6 +364,12 @@ open class EsclScanner: Identifiable {
         var retries: Int = 0
         
         while waitingForScanner {
+            
+            if Task.isCancelled {
+                try await self.cancelJob(jobId)
+                throw ScanJobError.cancelled
+            }
+            
             do {
                 scanResults.append(try await self.getNextDocument(for: jobId, updateProgress))
                 retries = 0
@@ -340,28 +390,17 @@ open class EsclScanner: Identifiable {
         let status = try await self.getStatus()
         
         guard let jobStatus = status.scanJobs[jobId] else {
-            throw ScannerRepresentationError.scanJobNotFound
+            //throw ScannerRepresentationError.scanJobNotFound
+            Self.logger.error("Couldn't find job with URI \(jobId) in scanner status. Full status:\n\(String(describing: status))")
+            return scanResults
         }
         
         guard jobStatus.jobState == .completed else {
-            throw ScannerRepresentationError.unexpectedScanJobState(jobStatus.jobState)
+            //throw ScannerRepresentationError.unexpectedScanJobState(jobStatus.jobState)
+            Self.logger.error("Scanner doesn't report job as completed. Full status:\n\(String(describing: status))")
+            return scanResults
         }
         
         return scanResults
-    }
-}
-
-public class DownloadTaskURLSessionDelegate: NSObject, URLSessionTaskDelegate {
-    
-    var progressObserver: NSKeyValueObservation?
-    
-    var updateProgress: (Progress, NSKeyValueObservedChange<Double>) -> ()
-    
-    init(_ updateProgress: @escaping (Progress, NSKeyValueObservedChange<Double>) -> ()) {
-        self.updateProgress = updateProgress
-    }
-    
-    public func urlSession(_ session: URLSession, didCreateTask task: URLSessionTask) {
-        progressObserver = task.progress.observe(\.fractionCompleted, changeHandler: updateProgress)
     }
 }
