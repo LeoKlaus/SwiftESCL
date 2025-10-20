@@ -96,6 +96,19 @@ open class ScannerBrowser: ObservableObject {
         browser.cancel()
     }
     
+    /**
+     Manually add a scanner to the device list.
+     - Parameter hostname:      Hostname/IP of the scanner to add.
+     - Parameter root:          Path to the eSCL endpoint. You probably don't have to change this.
+     - Parameter usePlainText:  Whether to use HTTPS or not.
+     
+     - Throws: ScannerRepresentationError.invalidUrl, if the hostname/root combination combines to an invalid URL.
+     */
+    public func addScanner(hostname: String, root: String = "eSCL", usePlainText: Bool = false) throws {
+        let scannerRep = try EsclScanner(hostname: hostname, root: root, usePlainText: usePlainText)
+        self.discovered.append(scannerRep)
+    }
+    
     private func addScanner(_ device: NWBrowser.Result) {
         switch device.metadata {
         case .none:
