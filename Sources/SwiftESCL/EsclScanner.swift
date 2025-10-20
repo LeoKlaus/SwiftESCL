@@ -322,7 +322,7 @@ open class EsclScanner: Identifiable {
         
         let jobUri = try await self.sendJobRequest(scanSettings: scanSettings)
         
-        let regex = #/.*\/ScanJobs\/([0-9a-f\-]*)/#
+        let regex = #/.*\/ScanJobs\/(.*)/#
         
         if let jobID = jobUri.firstMatch(of: regex)?.1 {
             return String(jobID)
