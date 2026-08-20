@@ -93,10 +93,11 @@ public struct ScannerStatus: XMLDecodable {
                 }
                 self.scannerStatus?.state = state
             case "adfstate":
+                // AdfState is optional in the status, so an unknown value
+                // shouldn't make the whole document unreadable.
                 guard let adfState = AdfState(rawValue: currentValue) else {
-                    self.parsingError = XMLDecodingError.unexptedType(AdfState.self, currentValue)
-                    parser.abortParsing()
-                    return
+                    Self.logger.warning("Ignoring unknown AdfState \(self.currentValue, privacy: .public)")
+                    break
                 }
                 self.scannerStatus?.adfState = adfState
             case "joburi":
