@@ -50,7 +50,7 @@ public struct EsclScanImageInfo: XMLDecodable {
     public class ParserDelegate: NSObject, XMLParserDelegate {
         
         static let logger = Logger(
-            subsystem: Bundle.main.bundleIdentifier!,
+            subsystem: Bundle.main.bundleIdentifier ?? "SwiftESCL",
             category: String(describing: ScannerBrowser.self)
         )
         
