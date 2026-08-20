@@ -338,7 +338,11 @@ public struct EsclScannerCapabilities: XMLDecodable {
         
         // For debugging
         public func parser(_ parser: XMLParser, parseErrorOccurred parseError: Error) {
-            self.parsingError = parseError
+            // abortParsing() reports NSXMLParserDelegateAbortedParseError here,
+            // which must not overwrite a more descriptive error set by the delegate.
+            if self.parsingError == nil {
+                self.parsingError = parseError
+            }
             parser.abortParsing()
         }
     }
