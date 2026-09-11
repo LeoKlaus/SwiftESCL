@@ -45,7 +45,7 @@ public struct ScannerStatus: XMLDecodable {
     public class ParserDelegate: NSObject, XMLParserDelegate {
         
         static let logger = Logger(
-            subsystem: Bundle.main.bundleIdentifier!,
+            subsystem: Bundle.main.bundleIdentifier ?? "SwiftESCL",
             category: String(describing: ScannerBrowser.self)
         )
         
@@ -69,7 +69,11 @@ public struct ScannerStatus: XMLDecodable {
         }
         
         public func parser(_ parser: XMLParser, parseErrorOccurred parseError: Error) {
-            self.parsingError = parseError
+            // abortParsing() reports NSXMLParserDelegateAbortedParseError here,
+            // which must not overwrite a more descriptive error set by the delegate.
+            if self.parsingError == nil {
+                self.parsingError = parseError
+            }
             parser.abortParsing()
         }
         
@@ -89,10 +93,11 @@ public struct ScannerStatus: XMLDecodable {
                 }
                 self.scannerStatus?.state = state
             case "adfstate":
+                // AdfState is optional in the status, so an unknown value
+                // shouldn't make the whole document unreadable.
                 guard let adfState = AdfState(rawValue: currentValue) else {
-                    self.parsingError = XMLDecodingError.unexptedType(AdfState.self, currentValue)
-                    parser.abortParsing()
-                    return
+                    Self.logger.warning("Ignoring unknown AdfState \(self.currentValue, privacy: .public)")
+                    break
                 }
                 self.scannerStatus?.adfState = adfState
             case "joburi":

@@ -73,7 +73,7 @@ public struct EsclScannerCapabilities: XMLDecodable {
     public class ParserDelegate: NSObject, XMLParserDelegate {
         
         static let logger = Logger(
-            subsystem: Bundle.main.bundleIdentifier!,
+            subsystem: Bundle.main.bundleIdentifier ?? "SwiftESCL",
             category: String(describing: ParserDelegate.self)
         )
         
@@ -338,7 +338,11 @@ public struct EsclScannerCapabilities: XMLDecodable {
         
         // For debugging
         public func parser(_ parser: XMLParser, parseErrorOccurred parseError: Error) {
-            self.parsingError = parseError
+            // abortParsing() reports NSXMLParserDelegateAbortedParseError here,
+            // which must not overwrite a more descriptive error set by the delegate.
+            if self.parsingError == nil {
+                self.parsingError = parseError
+            }
             parser.abortParsing()
         }
     }

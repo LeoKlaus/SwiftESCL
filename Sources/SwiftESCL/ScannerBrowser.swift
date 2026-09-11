@@ -14,7 +14,7 @@ import OSLog
 open class ScannerBrowser: ObservableObject {
     
     private let logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier!,
+        subsystem: Bundle.main.bundleIdentifier ?? "SwiftESCL",
         category: String(describing: ScannerBrowser.self)
     )
     
