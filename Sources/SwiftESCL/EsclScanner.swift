@@ -36,8 +36,6 @@ open class EsclScanner: Identifiable {
     
     /// eSCL version of the scanner
     public let esclVersion: String?
-    /// Configuration page URL for the scanner
-    public let adminUrl: String?
     /// Mime types supported by the scanner (all scanners must support JPEG and PDF)
     public var mimeTypes: [UTType] = [.pdf, .jpeg]
     /// Color spaces supported by the scanner
@@ -68,7 +66,7 @@ open class EsclScanner: Identifiable {
      - Parameter hostname: String containing the hostname/ip of the scanner.
      - Parameter root: The path to the eSCL root of the device. This should be  "eSCL" for most devices.
      */
-    public init(id: String = UUID().uuidString, hostname: String, port: Int? = nil, location: String? = nil, model: String? = nil, iconUrl: String? = nil, root: String, esclVersion: String? = nil, adminUrl: String? = nil, mimeTypes: [UTType] = [.pdf, .jpeg], colorSpaces: [ColorCapability] = [], inputSources: [InputSource] = [], duplex: Bool = false, usePlainText: Bool = false) throws {
+    public init(id: String = UUID().uuidString, hostname: String, port: Int? = nil, location: String? = nil, model: String? = nil, iconUrl: String? = nil, root: String, esclVersion: String? = nil, mimeTypes: [UTType] = [.pdf, .jpeg], colorSpaces: [ColorCapability] = [], inputSources: [InputSource] = [], duplex: Bool = false, usePlainText: Bool = false) throws {
         self.id = id
         self.hostname = hostname
         self.port = port
@@ -82,7 +80,6 @@ open class EsclScanner: Identifiable {
             self.iconUrl = nil
         }
         self.esclVersion = esclVersion
-        self.adminUrl = adminUrl
         
         self.mimeTypes = mimeTypes
         self.colorSpaces = colorSpaces
@@ -119,7 +116,6 @@ open class EsclScanner: Identifiable {
         
         self.hostname = host
         
-        // Servers that don't use the scheme default port (e.g. NAPS2, AirSane) say so in the adminurl
         self.port = port
         
         self.baseUrl = try EsclScanner.baseUrl(hostname: hostname, port: port, root: root, usePlainText: usePlainText)
@@ -132,9 +128,6 @@ open class EsclScanner: Identifiable {
         
         // eSCL Version
         self.esclVersion = recordDict["Vers"] ?? recordDict["vers"]
-        
-        // Admin url
-        self.adminUrl = recordDict["adminurl"]
         
         // Supported mime types
         if let pdl = recordDict["pdl"] {
