@@ -233,27 +233,17 @@ open class ScannerBrowser: ObservableObject {
                         guard self.resolutionsByDeviceId[deviceId] == connectionId else { return }
                         self.addScanner(device, host: hostName, port: Int(port.rawValue))
                     }
-                case .ipv4(let IPv4Address):
-                    do {
-                        let ipv4String = try IPv4Address.rawValue.toIPv4String()
-                        self.logger.debug("Got IPv4: \(ipv4String)")
-                        DispatchQueue.main.async {
-                            guard self.resolutionsByDeviceId[deviceId] == connectionId else { return }
-                            self.addScanner(device, host: ipv4String, port: Int(port.rawValue))
-                        }
-                    } catch {
-                        self.logger.error("Failed to decode IPv4 string \(error.localizedDescription, privacy: .public)")
+                case .ipv4(let ipv4Address):
+                    self.logger.debug("Got IPv4: \(ipv4Address.hostString)")
+                    DispatchQueue.main.async {
+                        guard self.resolutionsByDeviceId[deviceId] == connectionId else { return }
+                        self.addScanner(device, host: ipv4Address.hostString, port: Int(port.rawValue))
                     }
-                case .ipv6(let IPv6Address):
-                    do {
-                        let ipv6String = try IPv6Address.rawValue.toIPv6String()
-                        self.logger.debug("Got IPv6: \(ipv6String)")
-                        DispatchQueue.main.async {
-                            guard self.resolutionsByDeviceId[deviceId] == connectionId else { return }
-                            self.addScanner(device, host: ipv6String, port: Int(port.rawValue))
-                        }
-                    } catch {
-                        self.logger.error("Failed to decode IPv6 string \(error.localizedDescription, privacy: .public)")
+                case .ipv6(let ipv6Address):
+                    self.logger.debug("Got IPv6: \(ipv6Address.hostString)")
+                    DispatchQueue.main.async {
+                        guard self.resolutionsByDeviceId[deviceId] == connectionId else { return }
+                        self.addScanner(device, host: ipv6Address.hostString, port: Int(port.rawValue))
                     }
 
                 @unknown default:

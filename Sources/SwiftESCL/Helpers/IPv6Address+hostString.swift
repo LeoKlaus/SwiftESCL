@@ -1,45 +1,18 @@
 //
-//  Data+toIPString.swift
+//  IPv6Address+hostString.swift
 //  SwiftESCL
 //
 //  Created by Leo Wehrfritz on 13.09.26.
 //
 
-import Foundation
+import Network
 
-enum IPDecodingError: Error {
-    case invalidByteCount
-}
-
-extension Data {
+extension IPv6Address {
     /**
-     Formats this as an IPv4 string.
-     
-     - Returns: A string represting this as an IPv4
-     - Throws: `IPDecodingError.invalidByteCount` if the byte count does not match a valid IPv4.
+     A string representation of this address that can be used to construct a URL.
      */
-    func toIPv4String() throws -> String {
-        guard self.count == 4 else {
-            throw IPDecodingError.invalidByteCount
-        }
-        
-        let bytes = [UInt8](self)
-        
-        return bytes.map { String($0) }.joined(separator: ".")
-    }
-    
-    /**
-     Formats this as an IPv6 string.
-     
-     - Returns: A string represting this as an IPv6
-     - Throws: `IPDecodingError.invalidByteCount` if the byte count does not match a valid IPv6.
-     */
-    func toIPv6String() throws -> String {
-        guard self.count == 16 else {
-            throw IPDecodingError.invalidByteCount
-        }
-        
-        let bytes = [UInt8](self)
+    var hostString: String {
+        let bytes = [UInt8](self.rawValue)
         
         var groups = [UInt16](repeating: 0, count: 8)
         for i in 0..<8 {
@@ -73,7 +46,11 @@ extension Data {
             result += String(groups[i], radix: 16)
             i += 1
         }
-        
+
+        if self.isLinkLocal, let interfaceName = self.interface?.name {
+            result += "%25\(interfaceName)"
+        }
+
         return "[\(result)]"
     }
 }
