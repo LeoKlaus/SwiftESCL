@@ -101,16 +101,8 @@ open class EsclScanner: Identifiable {
      The main initialiser. This takes a TXT-Record from the Bonjour discovery and retrieves all necessary data.
      -  Parameter txtRecord: An NWTXTRecord returned by an eSCL-Compliant scanner.
      */
-    init(txtRecord: NWTXTRecord, usePlainText: Bool) throws {
+    init(host: String, port: Int, txtRecord: NWTXTRecord, usePlainText: Bool) throws {
         let recordDict = txtRecord.dictionary
-        
-        guard let adminUrlString = recordDict["adminurl"] else {
-            throw ScannerRepresentationError.noAdminUrl
-        }
-        
-        guard let parsedAdminUrl = URL(string: adminUrlString), let adminUrlHost = parsedAdminUrl.host else {
-            throw ScannerRepresentationError.invalidAdminUrl
-        }
         
         // According to the specification, the key should be "uuid", but my device uses "UUID"
         guard let uuid = recordDict["uuid"] ?? recordDict["UUID"] else {
@@ -125,10 +117,10 @@ open class EsclScanner: Identifiable {
         
         self.root = root
         
-        self.hostname = adminUrlHost
+        self.hostname = host
         
         // Servers that don't use the scheme default port (e.g. NAPS2, AirSane) say so in the adminurl
-        self.port = parsedAdminUrl.port
+        self.port = port
         
         self.baseUrl = try EsclScanner.baseUrl(hostname: hostname, port: port, root: root, usePlainText: usePlainText)
         

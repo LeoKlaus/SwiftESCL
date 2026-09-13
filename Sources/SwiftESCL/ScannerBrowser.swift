@@ -87,8 +87,20 @@ open class ScannerBrowser: ObservableObject {
                     self.logger.debug("Identical")
                 case .added(let device):
                     self.logger.debug("New device found: \(String(describing: device.endpoint), privacy: .public)")
-                    DispatchQueue.main.async {
-                        self.addScanner(device)
+                    
+                    switch device.endpoint {
+                    case .service(_,_,_,_),
+                            .hostPort(_,_):
+                        self.handleDiscoveredDevice(device)
+                        
+                    case .unix(_):
+                        self.logger.warning("Got UNIX path, this is not a valid scanner advertisement.")
+                    case .url(_):
+                        self.logger.warning("Got URL, this is not a valid scanner advertisement.")
+                    case .opaque(_):
+                        self.logger.warning("Got an opaque endpoint, this is not a valid scanner advertisement.")
+                    @unknown default:
+                        self.logger.warning("Received unexpected value for device endpoint")
                     }
                 case .removed(let device):
                     self.logger.debug("Device removed: \(String(describing: device.endpoint), privacy: .public)")
@@ -99,7 +111,7 @@ open class ScannerBrowser: ObservableObject {
                     self.logger.debug("Device changed: \(String(describing: old.metadata), privacy: .public) -> \(String(describing: new.metadata), privacy: .public): \(String(describing: flags), privacy: .public)")
                     DispatchQueue.main.async {
                         self.removeScanner(old)
-                        self.addScanner(new)
+                        self.handleDiscoveredDevice(new)
                     }
                 @unknown default:
                     break
@@ -128,18 +140,18 @@ open class ScannerBrowser: ObservableObject {
         self.discovered.append(scannerRep)
     }
     
-    private func addScanner(_ device: NWBrowser.Result) {
+    private func addScanner(_ device: NWBrowser.Result, host: String, port: Int) {
         switch device.metadata {
         case .none:
             self.logger.warning("Device \(String(describing: device.endpoint), privacy: .public) has no metadata.")
         case .bonjour(let record):
             do {
-                let scannerRep = try EsclScanner(txtRecord: record, usePlainText: usePlainText)
+                let scannerRep = try EsclScanner(host: host, port: port, txtRecord: record, usePlainText: usePlainText)
                 self.discovered.append(scannerRep)
             } catch {
                 self.logger.error("Couldn't initialize device \(String(describing: device.endpoint), privacy: .public):\n\(error.localizedDescription, privacy: .public)\n\(String(describing: error), privacy: .public)")
                 for (key, value) in record.dictionary {
-                    print("\(key):\t\(value)")
+                    self.logger.debug("\(key):\t\(value)")
                 }
             }
         @unknown default:
@@ -152,15 +164,58 @@ open class ScannerBrowser: ObservableObject {
         case .none:
             self.logger.warning("Device \(String(describing: device.endpoint), privacy: .public) has no metadata.")
         case .bonjour(let record):
-            do {
-                let scannerRep = try EsclScanner(txtRecord: record, usePlainText: usePlainText)
-                self.discovered.removeAll(where: { $0.id == scannerRep.id })
-            } catch {
-                self.logger.error("Couldn't initialize device \(String(describing: device.endpoint), privacy: .public):\n\(error.localizedDescription, privacy: .public)\n\(String(describing: error), privacy: .public)")
-            }
+            let id = record.dictionary["uuid"] ?? record.dictionary["UUID"]
+            self.discovered.removeAll(where: { $0.id == id })
         @unknown default:
             self.logger.warning("Device \(String(describing: device.endpoint), privacy: .public) has unexpected metadata.")
         }
+    }
+    
+    private nonisolated func handleDiscoveredDevice(_ device: NWBrowser.Result) {
+        let connection = NWConnection(to: device.endpoint, using: .tcp)
+        
+        connection.stateUpdateHandler = { state in
+            switch state {
+            case .ready:
+                if let innerEndpoint = connection.currentPath?.remoteEndpoint,
+                   case .hostPort(let host, let port) = innerEndpoint {
+                    switch host {
+                    case .name(let hostName, _):
+                        self.logger.debug("Got hostname: \(hostName)")
+                        DispatchQueue.main.async {
+                            self.addScanner(device, host: hostName, port: Int(port.rawValue))
+                        }
+                    case .ipv4(let IPv4Address):
+                        do {
+                            let ipv4String = try IPv4Address.rawValue.toIPv4String()
+                            self.logger.debug("Got IPv4: \(ipv4String)")
+                            DispatchQueue.main.async {
+                                self.addScanner(device, host: ipv4String, port: Int(port.rawValue))
+                            }
+                        } catch {
+                            self.logger.error("Failed to decode IPv4 string \(error.localizedDescription, privacy: .public)")
+                        }
+                    case .ipv6(let IPv6Address):
+                        do {
+                            let ipv6String = try IPv6Address.rawValue.toIPv6String()
+                            self.logger.debug("Got IPv6: \(ipv6String)")
+                            DispatchQueue.main.async {
+                                self.addScanner(device, host: ipv6String, port: Int(port.rawValue))
+                            }
+                        } catch {
+                            self.logger.error("Failed to decode IPv6 string \(error.localizedDescription, privacy: .public)")
+                        }
+                        
+                    @unknown default:
+                        self.logger.warning("Received unexpected endpoint information")
+                    }
+                    connection.cancel()
+                }
+            default:
+                break
+            }
+        }
+        connection.start(queue: .global())
     }
 }
 
