@@ -32,7 +32,7 @@ extension Data {
      Formats this as an IPv6 string.
      
      - Returns: A string represting this as an IPv6
-     - Throws: `IPDecodingError.invalidByteCount` if the byte count does not match a valid IPv4.
+     - Throws: `IPDecodingError.invalidByteCount` if the byte count does not match a valid IPv6.
      */
     func toIPv6String() throws -> String {
         guard self.count == 16 else {

@@ -22,6 +22,9 @@ open class ScannerBrowser: ObservableObject {
     
     var browser: NWBrowser
     var usePlainText: Bool
+
+    /// Connections opened to resolve a discovered device's real host/port, keyed by identity so they can be found again for cleanup.
+    private var pendingConnections: [ObjectIdentifier: NWConnection] = [:]
     
     
     /**
@@ -125,6 +128,11 @@ open class ScannerBrowser: ObservableObject {
     /// Stops bonjour discovery (Warning: you have to recreate ScannerBrowser before being able to start discovery again!)
     public func stopDiscovery() {
         browser.cancel()
+
+        for connection in pendingConnections.values {
+            connection.cancel()
+        }
+        pendingConnections.removeAll()
     }
     
     /**
@@ -173,47 +181,71 @@ open class ScannerBrowser: ObservableObject {
     
     private nonisolated func handleDiscoveredDevice(_ device: NWBrowser.Result) {
         let connection = NWConnection(to: device.endpoint, using: .tcp)
-        
+        let connectionId = ObjectIdentifier(connection)
+
+        let forgetConnection: @Sendable () -> Void = {
+            DispatchQueue.main.async {
+                self.pendingConnections.removeValue(forKey: connectionId)
+            }
+        }
+
         connection.stateUpdateHandler = { state in
             switch state {
             case .ready:
-                if let innerEndpoint = connection.currentPath?.remoteEndpoint,
-                   case .hostPort(let host, let port) = innerEndpoint {
-                    switch host {
-                    case .name(let hostName, _):
-                        self.logger.debug("Got hostname: \(hostName)")
-                        DispatchQueue.main.async {
-                            self.addScanner(device, host: hostName, port: Int(port.rawValue))
-                        }
-                    case .ipv4(let IPv4Address):
-                        do {
-                            let ipv4String = try IPv4Address.rawValue.toIPv4String()
-                            self.logger.debug("Got IPv4: \(ipv4String)")
-                            DispatchQueue.main.async {
-                                self.addScanner(device, host: ipv4String, port: Int(port.rawValue))
-                            }
-                        } catch {
-                            self.logger.error("Failed to decode IPv4 string \(error.localizedDescription, privacy: .public)")
-                        }
-                    case .ipv6(let IPv6Address):
-                        do {
-                            let ipv6String = try IPv6Address.rawValue.toIPv6String()
-                            self.logger.debug("Got IPv6: \(ipv6String)")
-                            DispatchQueue.main.async {
-                                self.addScanner(device, host: ipv6String, port: Int(port.rawValue))
-                            }
-                        } catch {
-                            self.logger.error("Failed to decode IPv6 string \(error.localizedDescription, privacy: .public)")
-                        }
-                        
-                    @unknown default:
-                        self.logger.warning("Received unexpected endpoint information")
-                    }
+                defer {
                     connection.cancel()
+                    forgetConnection()
                 }
+
+                guard let innerEndpoint = connection.currentPath?.remoteEndpoint,
+                      case .hostPort(let host, let port) = innerEndpoint else {
+                    self.logger.warning("Connected to \(String(describing: device.endpoint), privacy: .public) but couldn't resolve a host/port for it.")
+                    return
+                }
+
+                switch host {
+                case .name(let hostName, _):
+                    self.logger.debug("Got hostname: \(hostName)")
+                    DispatchQueue.main.async {
+                        self.addScanner(device, host: hostName, port: Int(port.rawValue))
+                    }
+                case .ipv4(let IPv4Address):
+                    do {
+                        let ipv4String = try IPv4Address.rawValue.toIPv4String()
+                        self.logger.debug("Got IPv4: \(ipv4String)")
+                        DispatchQueue.main.async {
+                            self.addScanner(device, host: ipv4String, port: Int(port.rawValue))
+                        }
+                    } catch {
+                        self.logger.error("Failed to decode IPv4 string \(error.localizedDescription, privacy: .public)")
+                    }
+                case .ipv6(let IPv6Address):
+                    do {
+                        let ipv6String = try IPv6Address.rawValue.toIPv6String()
+                        self.logger.debug("Got IPv6: \(ipv6String)")
+                        DispatchQueue.main.async {
+                            self.addScanner(device, host: ipv6String, port: Int(port.rawValue))
+                        }
+                    } catch {
+                        self.logger.error("Failed to decode IPv6 string \(error.localizedDescription, privacy: .public)")
+                    }
+
+                @unknown default:
+                    self.logger.warning("Received unexpected endpoint information")
+                }
+            case .failed(let error):
+                self.logger.warning("Connection to \(String(describing: device.endpoint), privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
+                connection.cancel()
+                forgetConnection()
+            case .cancelled:
+                forgetConnection()
             default:
                 break
             }
+        }
+
+        DispatchQueue.main.async {
+            self.pendingConnections[connectionId] = connection
         }
         connection.start(queue: .global())
     }
