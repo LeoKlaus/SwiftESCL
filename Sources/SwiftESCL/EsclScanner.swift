@@ -245,7 +245,7 @@ open class EsclScanner: Identifiable {
      - Parameter body: The body to send with the request, default is `nil`
      - Parameter updateProgress: A function that should be called by the URLSessionDelegate for progress updates
      */
-    open func sendRequest(method: String = "GET", endPoint: EsclEndpoint, body: Data? = nil, _ updateProgress: @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> Data {
+    open func sendRequest(method: String = "GET", endPoint: EsclEndpoint, body: Data? = nil, _ updateProgress: @Sendable @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> Data {
         let url = self.baseUrl.appendingPathComponent(endPoint.uri)
         
         let session = URLSession(configuration: .default, delegate: UnsafeURLSessionDelegate(), delegateQueue: nil)
@@ -344,7 +344,7 @@ open class EsclScanner: Identifiable {
      - Parameter jobId: The ID of the scan job
      - Parameter updateProgress:A function that should be called by the URLSessionDelegate for progress updates
      */
-    open func getNextDocument(for jobId: String, _ updateProgress: @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> Data {
+    open func getNextDocument(for jobId: String, _ updateProgress: @Sendable @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> Data {
         return try await self.sendRequest(endPoint: .scanNextDocument(jobId), updateProgress)
     }
     
@@ -353,7 +353,7 @@ open class EsclScanner: Identifiable {
      - Parameter jobId: The ID of the scan job
      - Parameter updateProgress:A function that should be called by the URLSessionDelegate for progress updates
      */
-    open func performScan(_ scanSettings: ScanSettings, _ updateProgress: @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> [Data] {
+    open func performScan(_ scanSettings: ScanSettings, _ updateProgress: @Sendable @escaping (Progress, NSKeyValueObservedChange<Double>) -> () = { _,_ in }) async throws -> [Data] {
         
         let jobId = try await self.startJob(scanSettings)
         

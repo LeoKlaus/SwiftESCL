@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class UnsafeURLSessionDelegate: NSObject, URLSessionDelegate {
+public final class UnsafeURLSessionDelegate: NSObject, URLSessionDelegate {
     
     // It is necessary to build a custom URLSessionDelegate for this as the self signed certificates the scanners use are obviously not trusted by default.
     public func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
