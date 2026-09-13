@@ -25,6 +25,10 @@ open class ScannerBrowser: ObservableObject {
 
     /// Connections opened to resolve a discovered device's real host/port, keyed by identity so they can be found again for cleanup.
     private var pendingConnections: [ObjectIdentifier: NWConnection] = [:]
+
+    /// The connection currently resolving each device's host/port, keyed by the device's uuid. Lets a `.changed`/`.removed` event
+    /// invalidate a resolution that's still in flight so it can't add a scanner back after it was superseded or removed.
+    private var resolutionsByDeviceId: [String: ObjectIdentifier] = [:]
     
     
     /**
@@ -133,6 +137,7 @@ open class ScannerBrowser: ObservableObject {
             connection.cancel()
         }
         pendingConnections.removeAll()
+        resolutionsByDeviceId.removeAll()
     }
     
     /**
@@ -155,6 +160,10 @@ open class ScannerBrowser: ObservableObject {
         case .bonjour(let record):
             do {
                 let scannerRep = try EsclScanner(host: host, port: port, txtRecord: record, usePlainText: usePlainText)
+                guard !self.discovered.contains(where: { $0.id == scannerRep.id }) else {
+                    self.logger.debug("Scanner \(scannerRep.id, privacy: .public) is already discovered; ignoring duplicate.")
+                    return
+                }
                 self.discovered.append(scannerRep)
             } catch {
                 self.logger.error("Couldn't initialize device \(String(describing: device.endpoint), privacy: .public):\n\(error.localizedDescription, privacy: .public)\n\(String(describing: error), privacy: .public)")
@@ -174,18 +183,32 @@ open class ScannerBrowser: ObservableObject {
         case .bonjour(let record):
             let id = record.dictionary["uuid"] ?? record.dictionary["UUID"]
             self.discovered.removeAll(where: { $0.id == id })
+
+            if let id, let connectionId = self.resolutionsByDeviceId.removeValue(forKey: id) {
+                self.pendingConnections.removeValue(forKey: connectionId)?.cancel()
+            }
         @unknown default:
             self.logger.warning("Device \(String(describing: device.endpoint), privacy: .public) has unexpected metadata.")
         }
     }
     
     private nonisolated func handleDiscoveredDevice(_ device: NWBrowser.Result) {
+        guard case .bonjour(let record) = device.metadata,
+              let deviceId = record.dictionary["uuid"] ?? record.dictionary["UUID"] else {
+            self.logger.warning("Device \(String(describing: device.endpoint), privacy: .public) has no usable Bonjour metadata; skipping host/port resolution.")
+            return
+        }
+
         let connection = NWConnection(to: device.endpoint, using: .tcp)
         let connectionId = ObjectIdentifier(connection)
 
         let forgetConnection: @Sendable () -> Void = {
             DispatchQueue.main.async {
                 self.pendingConnections.removeValue(forKey: connectionId)
+                // Only clear the "current resolution" pointer if a newer event hasn't already replaced it.
+                if self.resolutionsByDeviceId[deviceId] == connectionId {
+                    self.resolutionsByDeviceId.removeValue(forKey: deviceId)
+                }
             }
         }
 
@@ -207,6 +230,7 @@ open class ScannerBrowser: ObservableObject {
                 case .name(let hostName, _):
                     self.logger.debug("Got hostname: \(hostName)")
                     DispatchQueue.main.async {
+                        guard self.resolutionsByDeviceId[deviceId] == connectionId else { return }
                         self.addScanner(device, host: hostName, port: Int(port.rawValue))
                     }
                 case .ipv4(let IPv4Address):
@@ -214,6 +238,7 @@ open class ScannerBrowser: ObservableObject {
                         let ipv4String = try IPv4Address.rawValue.toIPv4String()
                         self.logger.debug("Got IPv4: \(ipv4String)")
                         DispatchQueue.main.async {
+                            guard self.resolutionsByDeviceId[deviceId] == connectionId else { return }
                             self.addScanner(device, host: ipv4String, port: Int(port.rawValue))
                         }
                     } catch {
@@ -224,6 +249,7 @@ open class ScannerBrowser: ObservableObject {
                         let ipv6String = try IPv6Address.rawValue.toIPv6String()
                         self.logger.debug("Got IPv6: \(ipv6String)")
                         DispatchQueue.main.async {
+                            guard self.resolutionsByDeviceId[deviceId] == connectionId else { return }
                             self.addScanner(device, host: ipv6String, port: Int(port.rawValue))
                         }
                     } catch {
@@ -245,6 +271,11 @@ open class ScannerBrowser: ObservableObject {
         }
 
         DispatchQueue.main.async {
+            // A previous resolution for the same device that's still in flight is now stale — cancel it.
+            if let staleConnectionId = self.resolutionsByDeviceId[deviceId] {
+                self.pendingConnections.removeValue(forKey: staleConnectionId)?.cancel()
+            }
+            self.resolutionsByDeviceId[deviceId] = connectionId
             self.pendingConnections[connectionId] = connection
         }
         connection.start(queue: .global())
