@@ -8,10 +8,6 @@
 import Foundation
 
 public enum ScannerRepresentationError: Error {
-    /// The TXT record of the scanner didn't include an admin URI
-    case noAdminUrl
-    /// The admin URI in the scanners TXT record is not a valid URL
-    case invalidAdminUrl
     /// The TXT record of the scanner doesn't include a UUID
     case noUuid
     /// The TXT record of the scanner doesn't inlcude the eSCL root path

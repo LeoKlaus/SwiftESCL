@@ -8,17 +8,22 @@ import Foundation
 import Network
 @testable import SwiftESCL
 
-private func txtRecord(adminUrl: String) -> NWTXTRecord {
-    NWTXTRecord([
-        "adminurl": adminUrl,
+private func txtRecord(adminUrl: String? = nil) -> NWTXTRecord {
+    var fields = [
         "uuid": "4509a320-00a0-008f-00b6-002507510eca",
         "rs": "eSCL"
-    ])
+    ]
+    if let adminUrl {
+        fields["adminurl"] = adminUrl
+    }
+    return NWTXTRecord(fields)
 }
 
-@Test func usesThePortFromTheAdminUrl() throws {
+@Test func usesTheProvidedHostAndPort() throws {
     let scanner = try EsclScanner(
-        txtRecord: txtRecord(adminUrl: "https://naps2-4509a320.local.:13284/eSCL/admin"),
+        host: "naps2-4509a320.local.",
+        port: 13284,
+        txtRecord: txtRecord(),
         usePlainText: false
     )
 
@@ -26,24 +31,16 @@ private func txtRecord(adminUrl: String) -> NWTXTRecord {
     #expect(scanner.baseUrl.absoluteString == "https://naps2-4509a320.local.:13284/eSCL")
 }
 
-@Test func usesThePortFromTheAdminUrlForPlainText() throws {
+@Test func usesTheProvidedHostAndPortForPlainText() throws {
     let scanner = try EsclScanner(
-        txtRecord: txtRecord(adminUrl: "http://naps2-4509a320.local.:13283/eSCL/admin"),
+        host: "naps2-4509a320.local.",
+        port: 13283,
+        txtRecord: txtRecord(),
         usePlainText: true
     )
 
     #expect(scanner.port == 13283)
     #expect(scanner.baseUrl.absoluteString == "http://naps2-4509a320.local.:13283/eSCL")
-}
-
-@Test func keepsTheSchemeDefaultWhenTheAdminUrlHasNoPort() throws {
-    let scanner = try EsclScanner(
-        txtRecord: txtRecord(adminUrl: "http://192.168.1.2/index.html"),
-        usePlainText: false
-    )
-
-    #expect(scanner.port == nil)
-    #expect(scanner.baseUrl.absoluteString == "https://192.168.1.2/eSCL")
 }
 
 @Test func manuallyAddedScannersCanSpecifyAPort() throws {
