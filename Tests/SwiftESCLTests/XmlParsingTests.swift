@@ -452,6 +452,35 @@ ORIGIN. -->
     #expect(secondJob.jobState == .processing)
 }
 
+/// Some widely-deployed servers emit the misspelled AdfState value
+/// "ScannedAdfLoaded" instead of "ScannerAdfLoaded".
+/// This fixture was captured from a real NAPS2 8.3.2 eSCL server.
+@Test func decodeScannerStatusWithMisspelledAdfState() async throws {
+    let xmlData = """
+<?xml version="1.0" encoding="UTF-8"?><scan:ScannerStatus xmlns:scan="http://schemas.hp.com/imaging/escl/2011/05/03" xmlns:pwg="http://www.pwg.org/schemas/2010/12/sm">  <pwg:Version>2.6</pwg:Version>  <pwg:State>Idle</pwg:State>  <scan:AdfState>ScannedAdfLoaded</scan:AdfState>  <scan:Jobs /></scan:ScannerStatus>
+""".data(using: .utf8)!
+
+    let scannerStatus = try ScannerStatus(xmlData: xmlData)
+
+    #expect(scannerStatus.version == "2.6")
+    #expect(scannerStatus.state == .idle)
+    #expect(scannerStatus.adfState == .loaded)
+}
+
+/// An unknown value in an optional field like AdfState shouldn't make the whole
+/// status document unreadable.
+@Test func decodeScannerStatusWithUnknownAdfState() async throws {
+    let xmlData = """
+<?xml version="1.0" encoding="UTF-8"?><scan:ScannerStatus xmlns:scan="http://schemas.hp.com/imaging/escl/2011/05/03" xmlns:pwg="http://www.pwg.org/schemas/2010/12/sm">  <pwg:Version>2.6</pwg:Version>  <pwg:State>Idle</pwg:State>  <scan:AdfState>ScannerAdfSomethingUnexpected</scan:AdfState>  <scan:Jobs /></scan:ScannerStatus>
+""".data(using: .utf8)!
+
+    let scannerStatus = try ScannerStatus(xmlData: xmlData)
+
+    #expect(scannerStatus.version == "2.6")
+    #expect(scannerStatus.state == .idle)
+    #expect(scannerStatus.adfState == nil)
+}
+
 @Test func decodeScanImageInfo() async throws {
     let xmlData = """
 <?xml version="1.0" encoding="UTF-8"?>

@@ -14,14 +14,14 @@ import OSLog
 open class ScannerBrowser: ObservableObject {
     
     private let logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier!,
+        subsystem: Bundle.main.bundleIdentifier ?? "SwiftESCL",
         category: String(describing: ScannerBrowser.self)
     )
     
     @Published public var discovered: [EsclScanner] = []
     
-    let browser: NWBrowser
-    let usePlainText: Bool
+    var browser: NWBrowser
+    var usePlainText: Bool
     
     var isClosed: Bool = false
     
@@ -38,6 +38,25 @@ open class ScannerBrowser: ObservableObject {
      - Parameter usePlainText Whether to query for scanners using the `uscan` or `uscans` service type. All scanners must discoverable via `uscan`, but most require the use of HTTPS for all operations. Plain text should only be used when no scanner can be found using `uscans`.
      */
     public init(usePlainText: Bool = false) {
+        
+        let parameters = NWParameters()
+        parameters.includePeerToPeer = true
+        
+        if usePlainText {
+            browser = NWBrowser(for: .bonjourWithTXTRecord(type: "_uscan._tcp", domain: nil), using: parameters)
+        } else {
+            browser = NWBrowser(for: .bonjourWithTXTRecord(type: "_uscans._tcp", domain: nil), using: parameters)
+        }
+        
+        self.usePlainText = usePlainText
+    }
+    
+    /**
+     Switch encryption for the current browser. This stops discovery and does not start it again.
+     - Parameter usePlainText Whether to query for scanners using the `uscan` or `uscans` service type. All scanners must discoverable via `uscan`, but most require the use of HTTPS for all operations. Plain text should only be used when no scanner can be found using `uscans`.
+     */
+    public func switchEncryption(usePlainText: Bool) {
+        self.stopDiscovery()
         
         let parameters = NWParameters()
         parameters.includePeerToPeer = true
@@ -100,6 +119,19 @@ open class ScannerBrowser: ObservableObject {
     public func stopDiscovery() {
         browser.cancel()
         self.isClosed = true
+    }
+    
+    /**
+     Manually add a scanner to the device list.
+     - Parameter hostname:      Hostname/IP of the scanner to add.
+     - Parameter root:          Path to the eSCL endpoint. You probably don't have to change this.
+     - Parameter usePlainText:  Whether to use HTTPS or not.
+     
+     - Throws: ScannerRepresentationError.invalidUrl, if the hostname/root combination combines to an invalid URL.
+     */
+    public func addScanner(hostname: String, root: String = "eSCL", usePlainText: Bool = false) throws {
+        let scannerRep = try EsclScanner(hostname: hostname, root: root, usePlainText: usePlainText)
+        self.discovered.append(scannerRep)
     }
     
     /**

@@ -14,7 +14,7 @@ import OSLog
 public actor EsclScanner: Identifiable {
     
     public static let logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier!,
+        subsystem: Bundle.main.bundleIdentifier ?? "SwiftESCL",
         category: String(describing: ScannerBrowser.self)
     )
     
@@ -23,6 +23,8 @@ public actor EsclScanner: Identifiable {
     public let baseUrl: URL
     /// Hostname of the scanner
     public let hostname: String
+    /// Port the eSCL endpoint is served on, if it differs from the scheme default (80/443)
+    public let port: Int?
     /// (User defined) location of the scanner
     public let location: String?
     /// Model of the scanner
@@ -48,13 +50,28 @@ public actor EsclScanner: Identifiable {
     public var capabilities: EsclScannerCapabilities? = nil
     
     /**
+     Builds the eSCL base URL for a scanner. The port is omitted when it is nil, which leaves the scheme default (80/443) in place.
+     */
+    private static func baseUrl(hostname: String, port: Int?, root: String, usePlainText: Bool) throws -> URL {
+        let scheme = usePlainText ? "http" : "https"
+        let authority = port.map { "\(hostname):\($0)" } ?? hostname
+        
+        guard let url = URL(string: scheme + "://" + authority + "/" + root) else {
+            throw ScannerRepresentationError.invalidUrl
+        }
+        
+        return url
+    }
+    
+    /**
      This initialiser is only meant for manually adding devices if Bonjour doesn't work or isn't avaiable.
      - Parameter hostname: String containing the hostname/ip of the scanner.
      - Parameter root: The path to the eSCL root of the device. This should be  "eSCL" for most devices.
      */
-    public init(id: String = UUID().uuidString, hostname: String, location: String? = nil, model: String? = nil, iconUrl: String? = nil, root: String, esclVersion: String? = nil, adminUrl: String? = nil, mimeTypes: [UTType] = [.pdf, .jpeg], colorSpaces: [ColorCapability] = [], inputSources: [InputSource] = [], duplex: Bool = false, usePlainText: Bool = false) throws {
+    public init(id: String = UUID().uuidString, hostname: String, port: Int? = nil, location: String? = nil, model: String? = nil, iconUrl: String? = nil, root: String, esclVersion: String? = nil, adminUrl: String? = nil, mimeTypes: [UTType] = [.pdf, .jpeg], colorSpaces: [ColorCapability] = [], inputSources: [InputSource] = [], duplex: Bool = false, usePlainText: Bool = false) throws {
         self.id = id
         self.hostname = hostname
+        self.port = port
         self.root = root
         
         self.location = location
@@ -77,17 +94,7 @@ public actor EsclScanner: Identifiable {
         
         self.duplex = duplex
         
-        if usePlainText {
-            guard let url = URL(string: "http://" + hostname + "/" + root) else {
-                throw ScannerRepresentationError.invalidUrl
-            }
-            self.baseUrl = url
-        } else {
-            guard let url = URL(string: "https://" + hostname + "/" + root) else {
-                throw ScannerRepresentationError.invalidUrl
-            }
-            self.baseUrl = url
-        }
+        self.baseUrl = try EsclScanner.baseUrl(hostname: hostname, port: port, root: root, usePlainText: usePlainText)
     }
     
     /**
@@ -101,7 +108,7 @@ public actor EsclScanner: Identifiable {
             throw ScannerRepresentationError.noAdminUrl
         }
         
-        guard let adminUrlHost = URL(string: adminUrlString)?.host else {
+        guard let parsedAdminUrl = URL(string: adminUrlString), let adminUrlHost = parsedAdminUrl.host else {
             throw ScannerRepresentationError.invalidAdminUrl
         }
         
@@ -120,17 +127,10 @@ public actor EsclScanner: Identifiable {
         
         self.hostname = adminUrlHost
         
-        if usePlainText {
-            guard let url = URL(string: "http://" + hostname + "/" + root) else {
-                throw ScannerRepresentationError.invalidUrl
-            }
-            self.baseUrl = url
-        } else {
-            guard let url = URL(string: "https://" + hostname + "/" + root) else {
-                throw ScannerRepresentationError.invalidUrl
-            }
-            self.baseUrl = url
-        }
+        // Servers that don't use the scheme default port (e.g. NAPS2, AirSane) say so in the adminurl
+        self.port = parsedAdminUrl.port
+        
+        self.baseUrl = try EsclScanner.baseUrl(hostname: hostname, port: port, root: root, usePlainText: usePlainText)
         
         // Location
         self.location = recordDict["note"]
